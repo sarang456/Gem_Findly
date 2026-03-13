@@ -1,0 +1,102 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-danger fs-3 me-4" href="{% url 'home' %}">findly.</a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            
+            {% if user.is_authenticated and user.is_staff %}
+            <form class="d-none d-lg-flex me-auto" style="width: 35%;" role="search">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 rounded-start-pill ps-3">
+                        <i class="bi bi-search text-muted small"></i>
+                    </span>
+                    <input type="text" class="form-control bg-light border-start-0 rounded-end-pill py-2" 
+                           placeholder="Search Item ID or Name..." aria-label="Search">
+                </div>
+            </form>
+            {% endif %}
+
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
+                
+                <li class="nav-item"><a class="nav-link small" href="{% url 'listings' %}">Browse</a></li>
+
+                {% if user.is_authenticated %}
+                    {% if user.is_staff %}
+                        <li class="nav-item">
+                            <a class="nav-link small text-dark" href="{% url 'admin_dashboard' %}">My Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link small fw-semibold text-dark" href="#">History</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link small fw-semibold text-dark position-relative" href="#">
+                                Pending
+                                <span class="badge rounded-pill bg-danger ms-1" style="font-size: 0.6rem;">3</span>
+                            </a>
+                        </li>
+                        <li class="nav-item me-2">
+                            <a class="btn btn-sm btn-outline-dark rounded-pill px-3 fw-bold" href="#">
+                                + Register Item
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link small text-dark" href="{% url 'dashboard' %}">My Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'history' %}active{% endif %}" href="{% url 'history' %}">
+                                <i class="bi bi-clock-history me-1"></i> History
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link small text-dark position-relative" href="#">
+                                <i class="bi bi-chat-left-text fs-5"></i>
+                                <span class="position-absolute top-2 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                    <span class="visually-hidden">New alerts</span>
+                                </span>
+                            </a>
+                        </li>
+                        <li class="nav-item ms-2 me-2">
+                            <a class="btn btn-sm btn-danger rounded-pill px-4 fw-bold shadow-sm" href="{% url 'create_report' %}">
+                                Report Lost
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link p-0" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                            <div class="avatar-circle">
+                                {{ user.email.0|upper }}
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-3 mt-2" style="width: 250px;">
+                            <li class="text-center py-2">
+                                <h6 class="fw-bold mb-0 small">{{ user.email }}</h6>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item rounded-3 py-2" href="{% url 'dashboard' %}">Settings</a></li>
+                            <li>
+                                <form action="{% url 'logout' %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-pill mt-2">Sign Out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link fw-medium" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" href="{% url 'register' %}">Sign Up</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

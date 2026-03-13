@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 text-center">
+                    <div class="text-danger mb-3">
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <h3 class="fw-bold">Report this Item?</h3>
+                    <p class="text-muted">You are reporting: <strong>{{ report.item.title }}</strong></p>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3 text-start">
+                            <label for="reason" class="form-label small fw-bold">Why are you reporting this?</label>
+                            <textarea name="reason" id="reason" class="form-control" rows="3" placeholder="e.g. Inappropriate content, spam, etc." required></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger">Submit Report</button>
+                            <a href="{% url 'listings' %}" class="btn btn-light">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

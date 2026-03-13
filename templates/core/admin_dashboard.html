@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'includes/sidebar.html' %}
+
+        <main class="col-md-10 ms-sm-auto px-md-5 pt-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 fw-bold">System Overview</h1>
+                    <p class="text-muted">Global statistics for Findly AI.</p>
+                </div>
+                <div class="btn-group">
+                    <a href="/admin/" class="btn btn-outline-dark btn-sm">Django Admin</a>
+                    <button class="btn btn-dark btn-sm">Export Data</button>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-3">
+                    <div class="p-4 border rounded bg-white shadow-sm">
+                        <small class="text-muted d-block text-uppercase fw-bold small">Total Reports</small>
+                        <span class="h2 fw-bold">{{ total_reports }}</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-4 border rounded bg-white shadow-sm">
+                        <small class="text-muted d-block text-uppercase fw-bold small">Active Cases</small>
+                        <span class="h2 fw-bold text-primary">{{ pending_reports }}</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-4 border rounded bg-white shadow-sm">
+                        <small class="text-muted d-block text-uppercase fw-bold small">AI Matches</small>
+                        <span class="h2 fw-bold text-success">{{ total_matches }}</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-4 border rounded bg-white shadow-sm">
+                        <small class="text-muted d-block text-uppercase fw-bold small">Total Users</small>
+                        <span class="h2 fw-bold">{{ total_users }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-bottom p-3">
+                    <h5 class="mb-0 fw-bold">Recent Global Activity</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="border-0">User</th>
+                                <th class="border-0">Item</th>
+                                <th class="border-0">Type</th>
+                                <th class="border-0">Date</th>
+                                <th class="border-0">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in all_reports %}
+                            <tr>
+                                <td>{{ report.user.username }}</td>
+                                <td class="fw-semibold">{{ report.item.title }}</td>
+                                <td>
+                                    {% if report.report_type == 'lost' %}
+                                        <span class="badge bg-danger-subtle text-danger px-3">Lost</span>
+                                    {% else %}
+                                        <span class="badge bg-success-subtle text-success px-3">Found</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted">{{ report.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-secondary">Flag</button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">No reports found in the system.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

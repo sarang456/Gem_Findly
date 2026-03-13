@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="form-container p-5 shadow-sm border-0">
+                <div class="text-center mb-4">
+                    <span class="bg-dark text-white rounded-3 p-2 fw-bold mb-3 d-inline-block"
+                        style="width: 40px;">F</span>
+                    <h2 class="fw-bold">Create Account</h2>
+                    <p class="text-muted small">Join Findly to start recovering lost items.</p>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="small fw-bold">Email Address</label>
+                        {{ form.email }}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="small fw-bold">First Name</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="small fw-bold">Last Name</label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small fw-bold">Gender</label>
+                        {{ form.gender }}
+                    </div>
+
+                    {% for field in form %}
+                    {% if field.name not in "email,first_name,last_name,gender" %}
+                    <div class="mb-3">
+                        <label class="small fw-bold">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">{{ field.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+
+                    <button type="submit" class="btn-airbnb w-100 mt-3">Create Account</button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="small text-muted">Already have an account?
+                        <a href="{% url 'login' %}" class="text-primary fw-bold text-decoration-none">Log In</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

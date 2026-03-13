@@ -1,0 +1,40 @@
+<nav class="col-md-2 d-none d-md-block bg-white border-end pt-4 min-vh-100 shadow-sm p-0">
+    <div class="sticky-sidebar px-3">
+        
+        <h6 class="text-muted text-uppercase small fw-bold mb-3 opacity-50">Main Menu</h6>
+        <ul class="nav flex-column gap-1">
+            <li class="nav-item">
+                <a class="nav-link text-dark p-2 rounded fw-semibold" href="{% url 'admin_dashboard' %}">🏠 Dashboard</a>
+            </li>
+        </ul>
+
+        {% if user.is_staff %}
+            <hr>
+            <h6 class="text-primary text-uppercase small fw-bold mb-3">Admin Control</h6>
+            <ul class="nav flex-column gap-1">
+                <li class="nav-item">
+                    <a class="nav-link text-muted p-2" href="#">📊 All Reports</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted p-2" href="{% url 'manage_users' %}">👥 Manage Users</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted p-2" href="{% url 'flagged_items' %}">🚩 Flagged Items</a>
+                </li>
+            </ul>
+        {% endif %}
+
+        {% if not user.is_staff %}
+            <hr>
+            <h6 class="text-muted text-uppercase small fw-bold mb-3">Your Activity</h6>
+            <ul class="nav flex-column gap-1">
+                <li class="nav-item">
+                    <a class="nav-link text-muted p-2" href="{% url 'create_report' %}">➕ New Report</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted p-2" href="#">📦 My Items</a>
+                </li>
+            </ul>
+        {% endif %}
+    </div>
+</nav>

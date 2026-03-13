@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>Match Comparison</h2>
+        <span class="badge bg-primary fs-5">AI Match Score: {{ match.score|floatformat:0 }}%</span>
+    </div>
+    <hr>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card border-danger h-100 shadow-sm">
+                <div class="card-header bg-danger text-white">LOST REPORT</div>
+                {% if match.lost_report.item.image %}
+                    <img src="{{ match.lost_report.item.image.url }}" class="card-img-top" style="height: 300px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h4>{{ match.lost_report.item.title }}</h4>
+                    <p><strong>Category:</strong> {{ match.lost_report.item.category }}</p>
+                    <p><strong>Description:</strong> {{ match.lost_report.item.description }}</p>
+                    <p class="text-muted"><small>Reported by: {{ match.lost_report.user.email }}</small></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-success h-100 shadow-sm">
+                <div class="card-header bg-success text-white">FOUND REPORT</div>
+                {% if match.found_report.item.image %}
+                    <img src="{{ match.found_report.item.image.url }}" class="card-img-top" style="height: 300px; object-fit: cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h4>{{ match.found_report.item.title }}</h4>
+                    <p><strong>Category:</strong> {{ match.found_report.item.category }}</p>
+                    <p><strong>Description:</strong> {{ match.found_report.item.description }}</p>
+                    <p class="text-muted"><small>Found at: {{ match.found_report.location_name }}</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="mailto:{{ match.found_report.user.email }}" class="btn btn-lg btn-primary px-5">Contact Finder</a>
+        <p class="mt-2 text-muted">Or mark as resolved if this is a mistake.</p>
+    </div>
+</div>
+{% endblock %}

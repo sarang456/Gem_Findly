@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold mb-1">Your History 📂</h2>
+            <p class="text-muted">Review your past reports and successful returns.</p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary rounded-pill btn-sm">
+            Back to Dashboard
+        </a>
+    </div>
+
+    <h5 class="fw-bold mb-4"><i class="bi bi-trophy text-success me-2"></i>Successful Returns</h5>
+    <div class="row g-4 mb-5">
+        {% for match in history_matches %}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-light opacity-75">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-success mb-2">Success</span>
+                            <h6 class="fw-bold mb-0">
+                                {{ match.found_report.item.title }}
+                            </h6>
+                            <small class="text-muted">Matched with {{ match.lost_report.user.email }}</small>
+                        </div>
+                        <i class="bi bi-check-all text-success fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5 border rounded-4 bg-light">
+            <p class="text-muted mb-0">No completed matches in your history yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

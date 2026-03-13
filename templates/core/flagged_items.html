@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'includes/sidebar.html' %}
+
+        <main class="col-md-10 ms-sm-auto px-md-5 pt-4">
+            <h1 class="h2 fw-bold">Moderation Queue</h1>
+            <p class="text-muted">Review items reported by the community or flagged by AI.</p>
+
+            <div class="row row-cols-1 row-cols-lg-3 g-4 mt-2">
+                {% for report in flagged_items %}
+                <div class="col">
+                    <div class="card h-100 border-danger shadow-sm">
+                        {% if report.item.image %}
+                        <img src="{{ report.item.image.url }}" class="card-img-top" style="height: 180px; object-fit: cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <span class="badge bg-danger mb-2">Flagged</span>
+                            <h5 class="card-title fw-bold">{{ report.item.title }}</h5>
+                            <p class="text-muted small">{{ report.flag_reason|default:"No reason provided." }}</p>
+                            <hr>
+                            <div class="d-flex gap-2">
+                                <form action="{% url 'resolve_flag' report.id %}" method="POST" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <button name="action" value="clear" class="btn btn-sm btn-outline-success w-100">Clear</button>
+                                </form>
+                                <form action="{% url 'resolve_flag' report.id %}" method="POST" class="flex-grow-1">
+                                    {% csrf_token %}
+                                    <button name="action" value="delete" class="btn btn-sm btn-danger w-100">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <h3 class="text-muted">All clear! No flagged items. 🌈</h3>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

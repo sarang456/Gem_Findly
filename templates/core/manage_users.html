@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'includes/sidebar.html' %}
+
+        <main class="col-md-10 ms-sm-auto px-md-5 pt-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 fw-bold">User Management</h1>
+                <span class="badge bg-dark rounded-pill">{{ users.count }} Total Users</span>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Reports</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 12px;">
+                                            {{ u.username|slice:":1"|upper }}
+                                        </div>
+                                        <span class="fw-semibold">{{ u.username }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ u.email }}</td>
+                                <td>
+                                    {% if u.is_staff %}
+                                        <span class="badge bg-info-subtle text-info">Admin</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">User</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="fw-bold">{{ u.report_count }}</span></td>
+                                <td class="text-muted small">{{ u.date_joined|date:"M d, Y" }}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light border" data-bs-toggle="dropdown">•••</button>
+                                        <ul class="dropdown-menu shadow-sm border-0">
+                                            <li><a class="dropdown-item" href="#">View Activity</a></li>
+                                            <li><a class="dropdown-item text-danger" href="#">Deactivate</a></li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

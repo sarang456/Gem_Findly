@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="form-container p-4 p-md-5">
+                <header class="mb-5">
+                    <h2 class="fw-bold mb-2">Ownership Challenge</h2>
+                    <p class="text-muted">The finder requires the following information to verify you are the owner of <strong>{{ item.item.title }}</strong>.</p>
+                </header>
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="form-section mb-4">
+                        <label class="form-label fw-bold">{{ item.question_1 }}</label>
+                        <textarea name="answer_1" class="notion-input w-100" rows="3" required placeholder="Type your answer here..."></textarea>
+                    </div>
+
+                    {% if item.question_2 %}
+                    <div class="form-section mb-4">
+                        <label class="form-label fw-bold">{{ item.question_2 }}</label>
+                        <textarea name="answer_2" class="notion-input w-100" rows="3" required placeholder="Type your answer here..."></textarea>
+                    </div>
+                    {% endif %}
+
+                    {% if item.requires_photo_proof %}
+                    <div class="form-section mb-5 p-4 bg-light rounded-4 border">
+                        <label class="form-label fw-bold text-danger">Photo Proof Required</label>
+                        <input type="file" name="proof_image" class="form-control mb-2" required>
+                        <small class="text-muted">Upload a receipt or a photo of you with the item.</small>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-3">
+                        <a href="{% url 'dashboard' %}" class="btn btn-light rounded-pill px-4">Cancel</a>
+                        <button type="submit" class="btn btn-danger rounded-pill px-5 fw-bold shadow-sm">Submit Claim</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

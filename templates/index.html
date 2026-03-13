@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="position-relative overflow-hidden p-3 p-md-5 m-md-4 text-center hero-glass"
+    style="background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1350&q=80'); 
+           background-size: cover; background-position: center; border-radius: 32px; color: white; min-height: 75vh; display: flex; align-items: center;">
+    <div class="col-md-8 p-lg-5 mx-auto">
+        <span class="badge rounded-pill bg-white text-danger mb-3 px-3 py-2 fw-bold shadow-sm">AI-POWERED
+            MATCHING</span>
+        <h1 class="display-3 fw-bold tracking-tight">Lost it? <span style="color: #FF385C;">Findly</span> it.</h1>
+        <p class="lead fw-normal mb-4 px-md-5">The campus network where AI connects lost treasures with their owners in
+            seconds.</p>
+
+        <form action="{% url 'listings' %}" method="GET"
+            class="bg-white rounded-pill p-1 shadow-lg mt-4 d-flex align-items-center mx-auto"
+            style="max-width: 600px; height: 58px; border: 1px solid rgba(0,0,0,0.1);">
+
+            <div class="ps-3 pe-2 text-muted">
+                <i class="bi bi-search"></i>
+            </div>
+
+            <input type="text" name="q" class="flex-grow-1 border-0 bg-transparent text-dark px-2"
+                placeholder="What are you looking for?"
+                style="outline: none; box-shadow: none; font-size: 1rem; min-width: 0;">
+
+            <button type="submit" class="btn btn-danger rounded-pill h-100 fw-bold btn-airbnb flex-shrink-0"
+                style="width: auto !important; padding: 0 30px !important; margin: 0 !important; background-color: #FF385C;">
+                Search
+            </button>
+        </form>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <a href="{% url 'create_report' %}?type=lost" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold">
+                🏃 I Lost Something
+            </a>
+            <a href="{% url 'create_report' %}?type=found" class="btn btn-outline-light rounded-pill px-4 py-2 fw-bold">
+                🤝 I Found Something
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5 py-4">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">How Findly Works</h2>
+        <div class="bg-danger mx-auto" style="width: 50px; height: 3px; border-radius: 2px;"></div>
+    </div>
+    <div class="row text-center g-4">
+        <div class="col-md-4">
+            <div class="p-4 card border-0 h-100">
+                <div class="feature-icon-circle bg-danger-subtle text-danger mb-3 mx-auto">1</div>
+                <h5 class="fw-bold">Report</h5>
+                <p class="text-muted small">Post your item. Our AI analyzes photos and text to extract key details.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 card border-0 h-100">
+                <div class="feature-icon-circle bg-primary-subtle text-primary mb-3 mx-auto">2</div>
+                <h5 class="fw-bold">Match</h5>
+                <p class="text-muted small">Our algorithm finds potential matches across the campus instantly.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="p-4 card border-0 h-100">
+                <div class="feature-icon-circle bg-success-subtle text-success mb-3 mx-auto">3</div>
+                <h5 class="fw-bold">Recover</h5>
+                <p class="text-muted small">Verify ownership through secure questions and coordinate the return.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5 pt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-bold">Recently Lost & Found Items</h2>
+            <p class="text-muted">Is one of these yours? Claim it safely.</p>
+        </div>
+        <a href="{% url 'listings' %}" class="text-danger fw-bold text-decoration-none">View all listings →</a>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+        {% for report in recent_found %}
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm item-card rounded-4 overflow-hidden">
+
+                <div class="position-absolute top-0 start-0 m-3" style="z-index: 2;">
+                    {% if report.report_type == 'found' %}
+                    <span class="badge bg-success rounded-pill px-3 shadow-sm">Found</span>
+                    {% else %}
+                    <span class="badge bg-danger rounded-pill px-3 shadow-sm"
+                        style="background-color: #FF385C;">Lost</span>
+                    {% endif %}
+                </div>
+
+                {% if report.item.image %}
+                <img src="{{ report.item.image.url }}" class="card-img-top" style="height: 180px; object-fit: cover;">
+                {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                    <i class="bi bi-image text-muted fs-1"></i>
+                </div>
+                {% endif %}
+
+                <div class="card-body p-3">
+                    <h6 class="fw-bold mb-1 text-truncate">{{ report.item.title }}</h6>
+                    <p class="text-muted x-small mb-3">
+                        <i class="bi bi-geo-alt me-1"></i>{{ report.location_name }}
+                    </p>
+                    <div class="d-grid">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'item_details' report.id %}" class="btn btn-outline-primary w-100">
+                                View Details
+                            </a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="btn btn-outline-secondary w-100">
+                                Login to View Details
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .hero-glass {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-airbnb {
+        background-color: #FF385C;
+        border: none;
+    }
+
+    .btn-airbnb:hover {
+        background-color: #E31C5F;
+        transform: translateY(-1px);
+    }
+
+    .feature-icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .item-card {
+        transition: all 0.3s ease;
+    }
+
+    .item-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+</style>
+
+{% endblock %}
