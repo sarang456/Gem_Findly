@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+            
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="bg-danger p-4 text-center text-white">
+                    <div class="mx-auto bg-white text-danger rounded-circle d-flex align-items-center justify-content-center mb-3 shadow-sm" 
+                         style="width: 80px; height: 80px; font-size: 2rem; font-weight: bold;">
+                        {{ target_user.email.0|upper }}
+                    </div>
+                    <h3 class="fw-bold mb-0">
+                        {% if target_user.first_name %}{{ target_user.first_name }} {{ target_user.last_name }}{% else %}{{ target_user.email }}{% endif %}
+                    </h3>
+                    <p class="opacity-75 small mb-0">Member since {{ target_user.date_joined|date:"F Y" }}</p>
+                </div>
+
+                <div class="row g-0 border-bottom bg-light">
+                    <div class="col-4 py-3 text-center border-end">
+                        <a href="{% if user.is_staff %}{% url 'all_reports_list' %}?user_id={{ target_user.id }}{% else %}{% url 'user_reports' %}{% endif %}" 
+                            class="text-decoration-none text-dark">
+                            <span class="d-block fw-bold fs-5 text-danger">{{ total_reports }}</span>
+                            <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Reports</small>
+                        </a>
+                    </div>
+                    <div class="col-4 py-3 text-center border-end">
+                        <span class="d-block fw-bold fs-5">{{ resolved_reports }}</span>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Resolved</small>
+                    </div>
+                    <div class="col-4 py-3 text-center">
+                        <span class="d-block fw-bold fs-5 text-success">{{ trust_percentage }}%</span>
+                        <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Trust Score</small>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 bg-white">
+                    <h6 class="text-uppercase text-muted fw-bold mb-4" style="font-size: 0.7rem; letter-spacing: 1px;">Account Information</h6>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="text-secondary small">Email Address</span>
+                        <span class="fw-semibold text-dark">{{ target_user.email }}</span>
+                    </div>
+
+                    {% if is_own_profile %}
+                    <div class="d-grid mt-2">
+                        <a href="{% url 'settings' %}" class="btn btn-outline-danger rounded-pill fw-bold py-2">
+                            <i class="bi bi-gear-fill me-2"></i> Edit Profile Settings
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

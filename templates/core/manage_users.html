@@ -49,8 +49,27 @@
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-light border" data-bs-toggle="dropdown">•••</button>
                                         <ul class="dropdown-menu shadow-sm border-0">
-                                            <li><a class="dropdown-item" href="#">View Activity</a></li>
-                                            <li><a class="dropdown-item text-danger" href="#">Deactivate</a></li>
+                                            <li>
+                                                <a class="dropdown-item py-2" href="{% url 'public_profile' u.id %}">
+                                                    <i class="bi bi-person-lines-fill me-2 text-muted"></i>View Activity
+                                                </a>
+                                            </li>
+                                            
+                                            <li><hr class="dropdown-divider"></li>
+                                            
+                                            <li>
+                                                <form action="{% url 'admin_toggle_user' u.id %}" method="POST" 
+                                                    onsubmit="return confirm('Are you sure you want to {% if u.is_active %}DEACTIVATE{% else %}REACTIVATE{% endif %} this user ({{ u.email }})?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="dropdown-item py-2 {% if u.is_active %}text-danger{% else %}text-success{% endif %}">
+                                                        {% if u.is_active %}
+                                                            <i class="bi bi-person-x me-2"></i>Deactivate User
+                                                        {% else %}
+                                                            <i class="bi bi-person-check me-2"></i>Reactivate User
+                                                        {% endif %}
+                                                    </button>
+                                                </form>
+                                            </li>
                                         </ul>
                                     </div>
                                 </td>

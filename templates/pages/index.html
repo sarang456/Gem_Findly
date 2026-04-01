@@ -81,45 +81,62 @@
 
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
         {% for report in recent_found %}
-        <div class="col">
-            <div class="card h-100 border-0 shadow-sm item-card rounded-4 overflow-hidden">
-
-                <div class="position-absolute top-0 start-0 m-3" style="z-index: 2;">
-                    {% if report.report_type == 'found' %}
-                    <span class="badge bg-success rounded-pill px-3 shadow-sm">Found</span>
-                    {% else %}
-                    <span class="badge bg-danger rounded-pill px-3 shadow-sm"
-                        style="background-color: #FF385C;">Lost</span>
-                    {% endif %}
-                </div>
-
-                {% if report.item.image %}
-                <img src="{{ report.item.image.url }}" class="card-img-top" style="height: 180px; object-fit: cover;">
-                {% else %}
-                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
-                    <i class="bi bi-image text-muted fs-1"></i>
-                </div>
-                {% endif %}
-
-                <div class="card-body p-3">
-                    <h6 class="fw-bold mb-1 text-truncate">{{ report.item.title }}</h6>
-                    <p class="text-muted x-small mb-3">
-                        <i class="bi bi-geo-alt me-1"></i>{{ report.location_name }}
-                    </p>
-                    <div class="d-grid">
-                        {% if user.is_authenticated %}
-                            <a href="{% url 'item_details' report.id %}" class="btn btn-outline-primary w-100">
-                                View Details
-                            </a>
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm item-card rounded-4 overflow-hidden position-relative">
+                    
+                    <div class="position-absolute top-0 start-0 m-3" style="z-index: 2;">
+                        {% if report.report_type == 'found' %}
+                            <span class="badge bg-success rounded-pill px-3 shadow-sm">Found</span>
                         {% else %}
-                            <a href="{% url 'login' %}" class="btn btn-outline-secondary w-100">
-                                Login to View Details
-                            </a>
+                            <span class="badge bg-danger rounded-pill px-3 shadow-sm" style="background-color: #FF385C;">Lost</span>
                         {% endif %}
+                    </div>
+
+                    {% if report.is_resolved %}
+                    <div class="position-absolute top-0 end-0 m-3" style="z-index: 2;">
+                        <span class="badge bg-dark rounded-pill px-3 shadow-sm">
+                            <i class="bi bi-check-lg me-1"></i>Returned
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <div class="image-container" style="position: relative;">
+                        {% if report.item.image %}
+                            <img src="{{ report.item.image.url }}" class="card-img-top" 
+                                style="height: 180px; object-fit: cover; {% if report.is_resolved %}filter: grayscale(80%) opacity(0.6);{% endif %}">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                                <i class="bi bi-image text-muted fs-1"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body p-3">
+                        <h6 class="fw-bold mb-1 text-truncate">{{ report.item.title }}</h6>
+                        <p class="text-muted x-small mb-3">
+                            <i class="bi bi-geo-alt me-1"></i>{{ report.location_name }}
+                        </p>
+                        
+                        <div class="d-grid">
+                            {% if user.is_authenticated %}
+                                {% if report.is_resolved %}
+                                    <a href="{% url 'item_details' report.id %}" class="btn btn-outline-secondary w-100">
+                                        Case Closed
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'item_details' report.id %}" class="btn btn-outline-primary w-100">
+                                        View Details
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <a href="{% url 'login' %}" class="btn btn-outline-secondary w-100">
+                                    Login to View
+                                </a>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         {% endfor %}
     </div>
 </div>

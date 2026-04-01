@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'includes/sidebar.html' %}
+
+        <main class="col-md-10 ms-sm-auto px-md-5 pt-4 bg-light min-vh-100">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 fw-bold">📈 Site Analytics</h1>
+                    <p class="text-muted">Real-time performance metrics for Findly AI.</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-white border shadow-sm btn-sm" onclick="window.location.reload()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-success border-4">
+                        <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Recovery Rate</small>
+                        <h2 class="fw-bold mb-0 text-success">{{ recovery_rate }}%</h2>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-success" style="width: {{ recovery_rate }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-danger border-4">
+                        <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Active Items</small>
+                        <h2 class="fw-bold mb-0 text-danger">{{ active_count }}</h2>
+                        <p class="text-muted small mb-0 mt-1">Currently being tracked</p>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-dark border-4">
+                        <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Resolved Items</small>
+                        <h2 class="fw-bold mb-0 text-dark">{{ resolved_count }}</h2>
+                        <p class="text-muted small mb-0 mt-1">Returned to owners</p>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 border-start border-primary border-4">
+                        <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Total Community</small>
+                        <h2 class="fw-bold mb-0 text-primary">{{ total_users }}</h2>
+                        <p class="text-muted small mb-0 mt-1">Registered users</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                        <h6 class="fw-bold text-muted mb-4">Item Distribution (Lost vs. Found)</h6>
+                        <div style="max-height: 300px;">
+                            <canvas id="itemTypeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                        <h6 class="fw-bold text-muted mb-4">Quick Insights</h6>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                Total Reports <span>{{ total_reports }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                Lost Items <span>{{ lost_count }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                Found Items <span>{{ found_count }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                        <h6 class="fw-bold text-muted mb-4"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Top Loss Hotspots</h6>
+                        
+                        {% for loc in location_data %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-bold text-dark">{{ loc.location_name }}</span>
+                                <span class="text-muted small">{{ loc.count }} Reports</span>
+                            </div>
+                            <div class="progress rounded-pill" style="height: 8px; background-color: #f0f2f5;">
+                                <div class="progress-bar bg-danger" 
+                                    role="progressbar" 
+                                    style="width: {% widthratio loc.count total_reports 100 %}%">
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-geo text-muted fs-1"></i>
+                            <p class="text-muted mt-2">No location data found in the database.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4 mb-5">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-white py-3 border-0">
+                            <h6 class="fw-bold text-muted mb-0"><i class="bi bi-clock-history me-2"></i>Recent Activity Feed</h6>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-light small text-uppercase text-muted">
+                                    <tr>
+                                        <th class="ps-4">User</th>
+                                        <th>Item</th>
+                                        <th>Type</th>
+                                        <th>Time</th>
+                                        <th class="text-end pe-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in recent_activity %}
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px; font-size: 10px;">
+                                                    {{ activity.user.email.0|upper }}
+                                                </div>
+                                                <span class="small">{{ activity.user.email }}</span>
+                                            </div>
+                                        </td>
+                                        <td><span class="fw-semibold">{{ activity.item.title|truncatechars:20 }}</span></td>
+                                        <td>
+                                            {% if activity.report_type == 'lost' %}
+                                                <span class="badge bg-danger-subtle text-danger rounded-pill">Lost</span>
+                                            {% else %}
+                                                <span class="badge bg-primary-subtle text-primary rounded-pill">Found</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-muted small">{{ activity.created_at|timesince }} ago</td>
+                                        <td class="text-end pe-4">
+                                            <a href="{% url 'item_details' activity.id %}" class="btn btn-sm btn-light rounded-pill px-3">View</a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">No recent activity to show.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+            <script>
+                const ctx = document.getElementById('itemTypeChart').getContext('2d');
+
+                // 1. Data Prep with Safety Check
+                const lostVal = {{ lost_count|default:0 }};
+                const foundVal = {{ found_count|default:0 }};
+                const dataValues = [lostVal, foundVal];
+                const total = dataValues.reduce((a, b) => a + b, 0);
+
+                // 2. Custom Plugin for Center Text (Fixed & Improved)
+                const centerTextPlugin = {
+                    id: 'centerText',
+                    afterDraw(chart) { // afterDraw is safer than beforeDraw for text overlays
+                        const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+                        ctx.save();
+                        
+                        // Draw "TOTAL" Label
+                        ctx.font = 'bold 12px sans-serif';
+                        ctx.fillStyle = '#6b7280'; // Gray color
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('TOTAL', width / 2, (height / 2) + 20);
+
+                        // Draw The Number
+                        ctx.font = 'bold 32px sans-serif';
+                        ctx.fillStyle = '#111827'; // Dark color
+                        ctx.fillText(total, width / 2, height / 2);
+                        
+                        ctx.restore();
+                    }
+                };
+
+                // 3. The Chart Constructor
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Lost Items', 'Found Items'],
+                        datasets: [{
+                            data: dataValues,
+                            backgroundColor: [
+                                'rgba(220, 53, 69, 0.85)', // Findly Red
+                                'rgba(13, 110, 253, 0.85)'  // Findly Blue
+                            ],
+                            hoverBackgroundColor: ['#dc3545', '#0d6efd'],
+                            borderWidth: 0,
+                            spacing: 5,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '78%', // Modern thin ring
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 25,
+                                    font: { size: 13, weight: '500' }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#111827',
+                                padding: 12,
+                                cornerRadius: 10,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw;
+                                        // Avoid division by zero error
+                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                        return ` ${context.label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    plugins: [centerTextPlugin] // This links the plugin above
+                });
+            </script>
+
+        </main>
+    </div>
+</div>
+{% endblock %}

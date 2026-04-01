@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'includes/sidebar.html' %}
+
+        <main class="col-md-10 ms-sm-auto px-md-5 pt-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold">📋 All System Reports</h2>
+                
+                <div class="d-flex gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-dark dropdown-toggle rounded-pill" type="button" data-bs-toggle="dropdown">
+                            Sort: {% if sort == 'oldest' %}Oldest First{% else %}Newest First{% endif %}
+                        </button>
+                        <ul class="dropdown-menu border-0 shadow">
+                            <li><a class="dropdown-item" href="?q={{ query }}&sort=newest">Newest First</a></li>
+                            <li><a class="dropdown-item" href="?q={{ query }}&sort=oldest">Oldest First</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {% if is_filtered_by_user %}
+                <div class="alert alert-dark d-flex justify-content-between align-items-center rounded-pill px-4">
+                    <span>
+                        <i class="bi bi-filter-circle me-2"></i>
+                        Showing all reports for: <strong>{{ filtered_user.email }}</strong>
+                    </span>
+                    <a href="{% url 'all_reports_list' %}" class="btn btn-sm btn-light rounded-pill">View All Users</a>
+                </div>
+            {% endif %}
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">ID</th>
+                                <th>Item Title</th>
+                                <th>Reported By</th>
+                                <th>Status</th>
+                                <th>Date Created</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports %}
+                            <tr>
+                                <td class="ps-4 text-muted small">#{{ report.id }}</td>
+                                <td class="fw-bold">{{ report.item.title }}</td>
+                                <td>{{ report.user.email }}</td>
+                                <td>
+                                    {% if report.is_resolved %}
+                                        <span class="badge bg-success-subtle text-success rounded-pill px-3">Resolved</span>
+                                    {% else %}
+                                        <span class="badge bg-warning-subtle text-warning rounded-pill px-3 text-dark">Active</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ report.created_at|date:"M d, Y" }}</td>
+                                <td class="text-end pe-4">
+                                    <a href="{% url 'item_details' report.id %}" class="btn btn-sm btn-dark rounded-pill px-3">View</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">No reports found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

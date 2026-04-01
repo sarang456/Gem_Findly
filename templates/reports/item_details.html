@@ -47,44 +47,50 @@
                 </div>
 
                 <div class="card bg-light border-0 rounded-4 p-4 mb-4">
-                    <h6 class="fw-bold mb-3"><i class="bi bi-shield-lock-fill me-2"></i>Contact Information</h6>
+                    <h6 class="fw-bold mb-3"><i class="bi bi-shield-lock-fill me-2"></i>Status & Contact</h6>
 
-                    {% if user.is_staff or is_owner or has_confirmed_match %}
-                    <p class="mb-1"><strong>Name:</strong> {{ report.user.get_full_name|default:"Member" }}</p>
-                    <p class="mb-1"><strong>Email:</strong> {{ report.user.email }}</p>
-
-                    {% if has_confirmed_match %}
-                    <div class="badge bg-success mt-2"><i class="bi bi-check-circle me-1"></i> Match Confirmed</div>
-                    {% endif %}
-
-                    {% if user.is_staff and not is_owner %}
-                    <div class="badge bg-warning text-dark mt-2">Admin View</div>
-                    {% endif %}
-
+                    {% if report.is_resolved %}
+                        <div class="text-center py-2">
+                            <div class="display-6 text-success mb-2"><i class="bi bi-check-circle-fill"></i></div>
+                            <h5 class="fw-bold text-success">This Item is Resolved</h5>
+                            <p class="text-muted small mb-0">Successfully returned to its owner.</p>
+                        </div>
+                    {% elif user.is_staff or is_owner or has_confirmed_match %}
+                        <p class="mb-1"><strong>Name:</strong> {{ report.user.get_full_name|default:"Member" }}</p>
+                        <p class="mb-1"><strong>Email:</strong> {{ report.user.email }}</p>
+                        
+                        {% if has_confirmed_match %}
+                            <div class="badge bg-success mt-2"><i class="bi bi-check-circle me-1"></i> Match Confirmed</div>
+                        {% endif %}
                     {% else %}
-                    <div class="alert alert-warning border-0 small mb-0 shadow-sm">
-                        <i class="bi bi-info-circle me-2"></i>
-                        User details are hidden for privacy. Please click the button below to start a claim.
-                    </div>
+                        <div class="alert alert-warning border-0 small mb-0 shadow-sm">
+                            <i class="bi bi-info-circle me-2"></i>
+                            User details are hidden for privacy. Please click the button below to start a claim.
+                        </div>
                     {% endif %}
                 </div>
 
                 <div class="d-grid gap-2">
-                    {% if not is_owner %}
+                    {% if report.is_resolved %}
+                        <button class="btn btn-secondary btn-lg rounded-pill fw-bold py-3 shadow-none w-100" disabled>
+                            Case Closed
+                        </button>
+                    {% elif not is_owner %}
                         {% if report.report_type == 'found' %}
-                        <a href="{% url 'start_claim' report.id %}" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow w-100">
-                            This is Mine!
-                        </a>
+                            <a href="{% url 'start_claim' report.id %}" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow w-100">
+                                This is Mine!
+                            </a>
                         {% else %}
-                        <a href="{% url 'create_report' %}" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow w-100">
-                            I Found This!
-                        </a>
+                            <a href="{% url 'create_report' %}" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow w-100">
+                                I Found This!
+                            </a>
                         {% endif %}
                     {% else %}
-                    <button class="btn btn-outline-dark btn-lg rounded-pill fw-bold py-3" disabled>
-                        You reported this item
-                    </button>
+                        <button class="btn btn-outline-dark btn-lg rounded-pill fw-bold py-3" disabled>
+                            You reported this item
+                        </button>
                     {% endif %}
+
                     <button class="btn btn-link text-muted btn-sm text-decoration-none mt-2">
                         <i class="bi bi-flag me-1"></i> Report inappropriate content
                     </button>

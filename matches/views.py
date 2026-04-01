@@ -1,0 +1,258 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from core.models import Report, Match
+from django.db.models import Q
+from django.contrib import messages
+
+# Create your views here.
+@login_required
+def dashboard(request):
+    if request.user.is_staff:
+        return redirect('admin_dashboard')
+
+    # 1. Separate Reports: Active vs Resolved
+    # This cleans the "messy" dashboard instantly
+    active_reports = Report.objects.filter(user=request.user, is_resolved=False).order_by('-created_at')
+    history_reports = Report.objects.filter(user=request.user, is_resolved=True).order_by('-created_at')
+
+   # 2. Separate Matches: Active vs Returned
+    # Only pull matches where BOTH reports are still live
+    all_user_matches = Match.objects.filter(
+        Q(lost_report__user=request.user) | Q(found_report__user=request.user)
+    ).filter(
+        # THIS IS THE CRITICAL ADDITION:
+        lost_report__is_resolved=False, 
+        found_report__is_resolved=False
+    ).select_related('lost_report__item', 'found_report__item')
+
+    # This will now only show matches for items that are ACTUALLY still lost/found
+    my_matches = Match.objects.filter(
+        Q(lost_report__user=request.user) | Q(found_report__user=request.user),
+        lost_report__is_resolved=False,
+        found_report__is_resolved=False
+    ).exclude(status='completed').order_by('-score')
+
+    # History Matches: Only show the ones specifically marked as finished
+    history_matches = Match.objects.filter(
+        Q(lost_report__user=request.user) | Q(found_report__user=request.user),
+        status='completed'
+    ).order_by('-score')
+
+    return render(request, 'matches/dashboard.html', {
+        'my_reports': active_reports,      # Still using the same variable name to avoid breaking your HTML
+        'my_matches': my_matches,          # Still using the same variable name
+        'history_reports': history_reports, # New: Pass this to a "History" section
+        'history_matches': history_matches  # New: Pass this to a "History" section
+    })
+
+
+@login_required
+def match_detail(request, match_id):
+    # Fetch the match or 404 if it doesn't exist
+    match = get_object_or_404(Match, id=match_id)
+    
+    # Security Check: Is this user part of this match?
+    if request.user != match.lost_report.user and request.user != match.found_report.user:
+        return redirect('dashboard') # Redirect if they try to snoop on others
+
+    return render(request, 'matches/match_detail.html', {'match': match})
+
+
+def claim_challenge(request, match_id):
+    # select_related avoids multiple hits to the DB
+    match = get_object_or_404(Match.objects.select_related('lost_report', 'found_report', 'found_report__item'), id=match_id)
+    
+    # Permission check
+    if match.lost_report.user != request.user:
+        messages.error(request, "Access denied.")
+        return redirect('dashboard')
+    
+    if match.status != 'pending':
+        messages.info(request, "This claim is already being processed.")
+        return redirect('dashboard')
+
+    if request.method == "POST":
+        match.answer_1 = request.POST.get('answer_1')
+        match.answer_2 = request.POST.get('answer_2')
+        
+        # Always check for files when using enctype="multipart/form-data"
+        if request.FILES.get('proof_image'):
+            match.proof_image = request.FILES['proof_image']
+        
+        match.status = 'claimed'
+        match.save()
+        
+        messages.success(request, "Claim submitted! Waiting for finder's verification.")
+        return redirect('dashboard')
+
+    return render(request, 'matches/claim_challenge.html', {
+        'match': match, 
+        'item': match.found_report  # This provides item.question_1 and item.item.title
+    })
+
+
+def review_claim(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    
+    # 1. SECURITY: Only the Finder can judge the claim
+    if match.found_report.user != request.user:
+        messages.error(request, "Nice try, but you can't review your own item!")
+        return redirect('dashboard')
+
+    if request.method == "POST":
+        action = request.POST.get('action')
+        
+        if action == 'accept':
+            match.status = 'confirmed'
+            match.is_confirmed = True
+            match.save()
+            messages.success(request, "Match Confirmed! The owner can now see your contact details.")
+        
+        elif action == 'reject':
+            # 2. BRUTAL TRUTH: If you reject, we must wipe the thief's answers
+            match.status = 'pending'
+            match.answer_1 = ""
+            match.answer_2 = ""
+            match.proof_image = None # Delete the fake proof
+            match.save()
+            messages.warning(request, "Claim rejected. The item is back on the market.")
+            
+        return redirect('dashboard')
+
+    return render(request, 'matches/review_claim.html', {'match': match})
+
+
+@login_required
+def start_claim_process(request, report_id):
+    # 1. Get the Found Item
+    found_report = get_object_or_404(Report, id=report_id)
+
+    # 2. Find the user's corresponding LOST report
+    user_lost_report = Report.objects.filter(user=request.user, report_type='lost', is_resolved=False).first()
+
+    # 3. TRAFFIC CONTROL: If no report exists, send them to the form
+    if not user_lost_report:
+        messages.info(request, "To claim this item, you first need to register your lost item details.")
+        return redirect('create_report')
+    
+    # 4. THE FIX: Create the match with a DEFAULT SCORE
+    match, created = Match.objects.get_or_create(
+        found_report=found_report,
+        lost_report=user_lost_report, # Use the object directly
+        defaults={
+            'status': 'pending',
+            'score': 100.0  # <--- THIS WAS MISSING. Database needs this!
+        }
+    )
+    
+    return redirect('claim_challenge', match_id=match.id)
+
+
+def close_case(request, match_id):
+    if request.method == 'POST':
+        # 1. Get the match
+        match = get_object_or_404(Match, id=match_id)
+        
+        # 2. Security Check (Only the Finder should close the case)
+        if match.found_report.user != request.user:
+            messages.error(request, "Unauthorized.")
+            return redirect('dashboard')
+            
+        # 3. THE FIX: Explicitly flip the switches
+        match.status = 'completed'
+        
+        # We must update the FOUND report
+        match.found_report.is_resolved = True
+        match.found_report.save() # CRITICAL: This saves the Report table
+        
+        # We must update the LOST report (if it exists)
+        if match.lost_report:
+            match.lost_report.is_resolved = True
+            match.lost_report.save() # CRITICAL: This saves the other Report
+            
+        match.save() # This saves the Match table status
+        
+        messages.success(request, "Database updated! Case is now resolved.")
+    
+    return redirect('dashboard')
+    
+
+@login_required
+def history(request):
+    # 1. Get reports the user resolved (Manual close or Match close)
+    history_reports = Report.objects.filter(
+        user=request.user, 
+        is_resolved=True
+    ).order_by('-created_at')
+
+    # 2. Get matches that reached the 'completed' status
+    history_matches = Match.objects.filter(
+        Q(lost_report__user=request.user) | Q(found_report__user=request.user)
+    ).filter(status='completed').select_related(
+        'lost_report__item', 
+        'found_report__item'
+    ).order_by('-id')
+
+    return render(request, 'matches/history.html', {
+        'history_reports': history_reports,
+        'history_matches': history_matches
+    })
+
+
+def claim_match(request, match_id):
+    # 1. Fetch the match safely
+    match = get_object_or_404(Match, id=match_id)
+    
+    # 2. Brutal Security Check: Is this actually the user's lost item?
+    if match.lost_report.user != request.user:
+        messages.error(request, "You don't have permission to claim this item.")
+        return redirect('dashboard')
+    
+    # 3. Logic: Mark as confirmed
+    match.status = 'claimed'
+    match.save()
+    
+    # 4. Feedback
+    messages.success(request, f"Claim submitted for {match.found_report.item.title}! The finder has been notified.")
+    return redirect('dashboard')
+
+
+@login_required
+def resolve_match(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    
+    if request.user == match.lost_report.user or request.user == match.found_report.user:
+        # 1. Update the Match Status (The most important part)
+        match.status = 'returned'
+        match.save()
+        
+        # 2. Update the Reports (To hide them from main dashboard)
+        match.lost_report.is_resolved = True
+        match.lost_report.save()
+        
+        match.found_report.is_resolved = True
+        match.found_report.save()
+        
+        messages.success(request, "Item successfully returned and moved to history!")
+    else:
+        messages.error(request, "You do not have permission to resolve this match.")
+        
+    return redirect('dashboard')
+
+
+def match_detail_public(request, match_id):
+    # This is a placeholder for the AI match detail view
+    match = get_object_or_404(Match, id=match_id)
+    return render(request, 'core/match_detail.html', {'match': match})
+
+@login_required
+def my_reports(request):
+    # Fetching all reports by this user
+    # We order by 'is_resolved' (False comes first usually) and then date
+    reports = Report.objects.filter(user=request.user).order_by('is_resolved', '-created_at')
+    
+    return render(request, 'matches/my_reports.html', {
+        'reports': reports,
+        'total_count': reports.count(),
+        'active_count': reports.filter(is_resolved=False).count()
+    })
