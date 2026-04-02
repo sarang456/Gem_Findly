@@ -179,23 +179,31 @@ def close_case(request, match_id):
 
 @login_required
 def history(request):
-    # 1. Get reports the user resolved (Manual close or Match close)
-    history_reports = Report.objects.filter(
-        user=request.user, 
-        is_resolved=True
-    ).order_by('-created_at')
-
-    # 2. Get matches that reached the 'completed' status
-    history_matches = Match.objects.filter(
-        Q(lost_report__user=request.user) | Q(found_report__user=request.user)
-    ).filter(status='completed').select_related(
-        'lost_report__item', 
-        'found_report__item'
-    ).order_by('-id')
+    is_staff = request.user.is_staff
+    
+    if is_staff:
+        # ADMIN: Get every resolved report and completed match in the system
+        history_reports = Report.objects.filter(is_resolved=True).order_by('-created_at')
+        history_matches = Match.objects.filter(status='completed').select_related(
+            'lost_report__item', 
+            'found_report__item',
+            'lost_report__user'
+        ).order_by('-id')
+    else:
+        # USER: Only their own data
+        history_reports = Report.objects.filter(user=request.user, is_resolved=True).order_by('-created_at')
+        history_matches = Match.objects.filter(
+            Q(lost_report__user=request.user) | Q(found_report__user=request.user)
+        ).filter(status='completed').select_related(
+            'lost_report__item', 
+            'found_report__item',
+            'lost_report__user'
+        ).order_by('-id')
 
     return render(request, 'matches/history.html', {
         'history_reports': history_reports,
-        'history_matches': history_matches
+        'history_matches': history_matches,
+        'is_admin': is_staff  # Pass this flag to the template
     })
 
 

@@ -8,16 +8,24 @@ from django.contrib import messages
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
+from core.models import OTPVerification
+from core.signals import send_verification_email
+import random
 
+User = get_user_model()
 
 # Create your views here.
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user) # Automatically log them in after signing up
-            return redirect('dashboard')
+            user = form.save(commit=False)
+            user.is_active = False  # CRITICAL: User cannot login yet!
+            user.save()
+
+            request.session['otp_user_id'] = user.id
+            return redirect('verify_otp')
+
     else:
         form = UserRegisterForm()
     return render(request, 'accounts/register.html', {'form': form})
@@ -105,3 +113,61 @@ def deactivate_account(request):
     
     # If they try to GET this page, just send them back to settings
     return redirect('settings')
+
+
+
+def verify_otp(request):
+    # 1. Get the user from the session (saved during register view)
+    user_id = request.session.get('otp_user_id')
+    if not user_id:
+        messages.error(request, "Session expired. Please register again.")
+        return redirect('register')
+
+    user = User.objects.get(id=user_id)
+
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp_code')
+        otp_record = OTPVerification.objects.filter(user=user, otp_code=entered_otp).first()
+
+        # 2. Check if OTP is correct and not expired
+        if otp_record:
+            # We will add an 'is_expired' check here later
+            user.is_active = True
+            user.save()
+            
+            # Cleanup: Delete the OTP so it can't be used again
+            otp_record.delete()
+            
+            # Log them in and send to dashboard
+            login(request, user)
+            del request.session['otp_user_id'] # Clear session
+            messages.success(request, "Email verified! Welcome to Findly.")
+            return redirect('dashboard')
+        else:
+            messages.error(request, "Invalid OTP code. Please try again.")
+
+    return render(request, 'accounts/verify_otp.html', {'email': user.email})
+
+def resend_otp(request):
+    # 1. Identify the user from the session
+    user_id = request.session.get('otp_user_id')
+    
+    if not user_id:
+        messages.error(request, "Session expired. Please register again.")
+        return redirect('register')
+
+    try:
+        user = User.objects.get(id=user_id)
+        
+        # 2. Trigger the Master Logic from signals.py
+        # This generates a new code and sends the email
+        send_verification_email(user)
+        
+        messages.success(request, "A fresh 6-digit code has been sent to your inbox.")
+    except User.DoesNotExist:
+        messages.error(request, "User not found.")
+        return redirect('register')
+
+    # 3. Stay on the same verification page
+    return redirect('verify_otp')
+

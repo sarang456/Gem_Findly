@@ -1,6 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.conf import settings
+import datetime
+from django.utils import timezone
+from django.contrib.auth import get_user_model
 
 # 1. Custom User Manager & Model (Refined)
 class UserManager(BaseUserManager):
@@ -72,6 +75,8 @@ class Report(models.Model):
     is_resolved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    updated_at = models.DateTimeField(auto_now=True)
+
     is_flagged = models.BooleanField(default=False)
     flag_reason = models.TextField(blank=True, null=True)
 
@@ -122,3 +127,16 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = "Categories"
+
+
+class OTPVerification(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='otp')
+    otp_code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        # OTP is only valid for 5 minutes
+        return timezone.now() > self.created_at + datetime.timedelta(minutes=5)
+
+    def __str__(self):
+        return f"OTP for {self.user.email}: {self.otp_code}"

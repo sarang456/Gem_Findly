@@ -121,3 +121,12 @@ def report_item(request, report_id):
         return redirect('listings') # Or wherever the user was
         
     return render(request, 'reports/report_confirm.html', {'report': item_to_report})
+
+@login_required
+def close_case_manual(request, report_id):
+    report = get_object_or_404(Report, id=report_id, user=request.user)
+    if request.method == 'POST':
+        report.is_resolved = True
+        report.save()
+        messages.success(request, "Congratulations! Your report has been marked as resolved.")
+    return redirect('dashboard')

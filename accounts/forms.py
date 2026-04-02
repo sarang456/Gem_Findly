@@ -1,32 +1,40 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class UserRegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'notion-input', 'placeholder': 'Enter your email'}))
-    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'notion-input', 'placeholder': 'First Name'}))
-    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'notion-input', 'placeholder': 'Last Name'}))
-    gender = forms.ChoiceField(choices=(('', 'Select Gender'), ('male', 'Male'), ('female', 'Female'), ('other', 'Other')),widget=forms.Select(attrs={'class': 'notion-input'}))
-    # If you have a custom 'role' field in your model
-    role = forms.ChoiceField(choices=[('user', 'Standard User'), ('admin', 'Staff')], widget=forms.Select(attrs={'class': 'notion-input'}))
+    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
+        'class': 'notion-input', 'placeholder': 'Enter your email'
+    }))
+    first_name = forms.CharField(required=True, widget=forms.TextInput(attrs={
+        'class': 'notion-input', 'placeholder': 'First Name'
+    }))
+    last_name = forms.CharField(required=True, widget=forms.TextInput(attrs={
+        'class': 'notion-input', 'placeholder': 'Last Name'
+    }))
+    
+    GENDER_CHOICES = (('', 'Select Gender'), ('male', 'Male'), ('female', 'Female'), ('other', 'Other'))
+    gender = forms.ChoiceField(choices=GENDER_CHOICES, widget=forms.Select(attrs={'class': 'notion-input'}))
+    
+    ROLE_CHOICES = [('user', 'Standard User'), ('admin', 'Staff')]
+    role = forms.ChoiceField(choices=ROLE_CHOICES, widget=forms.Select(attrs={'class': 'notion-input'}))
 
     class Meta(UserCreationForm.Meta):
         model = User
-        # Fact: If you haven't deleted 'username' from your model, you MUST include it here.
         fields = ("email", "first_name", "last_name", "gender", "role")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Applying your custom styling to the default UserCreationForm fields
-        if 'username' in self.fields:
-            self.fields['username'].widget.attrs.update({'class': 'notion-input', 'placeholder': 'Pick a unique username'})
-        for field in self.fields:
-            if field not in ['email', 'first_name', 'last_name', 'gender']:
-                self.fields[field].widget.attrs.update({'class': 'notion-input', 'placeholder': 'Password'})
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'notion-input'})
+            if 'password' in field_name:
+                field.widget.attrs.update({'placeholder': 'Enter Password'})
+
 
 class UserUpdateForm(forms.ModelForm):
-    email = forms.EmailField(disabled=True) # Protect the email from easy changes
+    email = forms.EmailField(disabled=True)
 
     class Meta:
         model = User

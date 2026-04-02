@@ -125,20 +125,36 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for report in my_reports %}
-                    <tr>
-                        <td class="ps-4 fw-semibold">{{ report.item.title }}</td>
-                        <td><span class="badge bg-light text-dark border">{{ report.report_type|title }}</span></td>
-                        <td><span class="text-success small"><i class="bi bi-circle-fill me-1"
-                                    style="font-size: 0.5rem;"></i> Live</span></td>
-                        <td class="text-end pe-4">
-                            <a href="#" class="btn btn-sm btn-outline-dark rounded-pill px-3">View</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center py-5 text-muted">No reports found.</td>
-                    </tr>
+                   {% for report in my_reports %}
+                        <tr>
+                            <td class="ps-4 fw-semibold">{{ report.item.title }}</td>
+                            <td><span class="badge bg-light text-dark border">{{ report.report_type|title }}</span></td>
+                            <td>
+                                <span class="text-success small">
+                                    <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Live
+                                </span>
+                            </td>
+                            
+                            <td class="text-end pe-4">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a href="{% url 'item_details' report.id %}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                                        View
+                                    </a>
+
+                                    <form action="{% url 'close_case_manual' report.id %}" method="POST" class="m-0">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold" 
+                                                onclick="return confirm('Found your item? This will move it to your History and hide it from others.')">
+                                            <i class="bi bi-check-lg me-1"></i> Found!
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">No active reports found.</td>
+                        </tr>
                     {% endfor %}
                 </tbody>
             </table>
