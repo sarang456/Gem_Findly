@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+ 
+{% block content %}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-sm border-0 p-4 text-center" style="max-width: 450px; border-radius: 20px;">
+        <h2 class="fw-bold" style="color: #dc3545;">Support Findly</h2>
+        <p class="text-muted">Your donation helps us connect lost items with their owners.</p>
+
+        <hr class="my-4">
+
+        {% if not payment %}
+        <form method="POST" action="{% url 'donate' %}">
+            {% csrf_token %}
+            <label class="form-label text-secondary small fw-bold">ENTER DONATION AMOUNT</label>
+            <div class="input-group mb-4">
+                <span class="input-group-text bg-white border-end-0">₹</span>
+                <input type="number" name="amount" class="form-control border-start-0 fw-bold" value="100" min="1" required>
+            </div>
+            <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 shadow-sm">
+                Generate Payment Link
+            </button>
+        </form>
+        {% endif %}
+
+        {% if payment %}
+        <div class="payment-confirmation">
+            <div class="alert alert-info py-2 small">
+                Order ID: <span class="fw-bold">{{ payment.id }}</span>
+            </div>
+            
+            <h4 class="mb-3">Confirm Payment of ₹{{ amount_display }}</h4>
+
+            <form action="{% url 'payment_success' %}" method="POST">
+                {% csrf_token %}
+                <script 
+                    src="https://checkout.razorpay.com/v1/checkout.js" 
+                    data-key="rzp_test_SYypqSe8o0hG0x" 
+                    data-amount="{{ payment.amount }}" 
+                    data-currency="INR"
+                    data-order_id="{{ payment.id }}"
+                    data-buttontext="Pay Securely with Razorpay" 
+                    data-name="Findly Project" 
+                    data-description="Academic Donation Transaction" 
+                    data-image="https://ui-avatars.com/api/?name=Findly&background=dc3545&color=fff"
+                    data-prefill.name="{{ request.user.first_name }} {{ request.user.last_name }}" 
+                    data-prefill.email="{{ request.user.email }}"
+                    data-prefill.contact="9123456789"
+                    data-theme.color="#dc3545"
+                ></script>
+                
+                </form>
+            
+            <a href="{% url 'donate' %}" class="btn btn-link btn-sm text-decoration-none mt-3">Change Amount</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* This targets the automatic Razorpay button to make it look like a Bootstrap button */
+    .razorpay-payment-button {
+        background-color: #dc3545 !important;
+        color: white !important;
+        border: none !important;
+        padding: 10px 30px !important;
+        border-radius: 50px !important;
+        font-weight: bold !important;
+        width: 100% !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        transition: 0.3s !important;
+    }
+    .razorpay-payment-button:hover {
+        background-color: #bb2d3b !important;
+        transform: translateY(-1px);
+    }
+</style>
+
+
+
+
+
+
+
+
+<!-- <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-sm border-0 p-4 text-center" style="max-width: 400px; border-radius: 20px;">
+        <h2 class="fw-bold" style="color: #dc3545;">Support Findly</h2>
+        <p class="text-muted">Your donation helps us find more lost items!</p>
+
+        {% if not payment %}
+        <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+            <div class="card shadow-sm border-0 p-4 text-center" style="max-width: 400px; border-radius: 20px;">
+                <h2 class="fw-bold" style="color: #dc3545;">Support Findly</h2>
+                <p class="text-muted">Your donation helps us find more lost items!</p>
+
+                <form method="POST" action="{% url 'donate' %}">
+                    {% csrf_token %}
+                    <div class="input-group mb-3">
+                        <span class="input-group-text bg-white border-end-0">₹</span>
+                        <input type="number" name="amount" class="form-control border-start-0" value="100" min="1" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 shadow-sm">
+                        Proceed to Pay
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if payment %}
+        <div class="alert alert-success">Order Created! Click below to pay.</div>
+        <form action="{% url 'payment_success' %}" method="POST">
+            <script 
+                src="https://checkout.razorpay.com/v1/checkout.js" 
+                data-key="rzp_test_SYypqSe8o0hG0x" 
+                data-amount="{{payment.amount}}"   
+                data-currency="INR"
+                data-order id="{{payment.id}}"
+                data-buttontext="Click here to Pay ₹{{amount_display}}" 
+                data-name="Findly Donation Corp" 
+                data-description="Test transaction" 
+                data-prefill.name="{{request.user.first_name}}" 
+                data-prefill.email="{{request.user.email}}"
+                data-prefill.contact="9999999999"
+                data-theme.color="#F37254"
+            ></script>
+            <input type="hidden" custome="Hidden Element" name="hidden">
+        </form>
+        {% endif %}
+    </div>
+</div> -->
+
+
+
+
+
+<!-- 
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-sm border-0 p-4 text-center" style="max-width: 400px; border-radius: 20px;">
+        <h2 class="fw-bold" style="color: #dc3545;">Support Findly</h2>
+        <p class="text-muted">Your donation helps us find more lost items!</p>
+
+        <form method="POST" action="{% url 'donate' %}">
+            {% csrf_token %}
+            <div class="input-group mb-3">
+                <span class="input-group-text bg-white border-end-0">₹</span>
+                <input type="number" name="amount" class="form-control border-start-0" value="100" min="1" required>
+            </div>
+            <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 shadow-sm">
+                Proceed to Pay
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if payment %}
+<form action="payment-success/" method="POST"> // Replace this with your webs:
+    <script 
+        src ="https://checkout.razorpay.com/v1/checkout.js" 
+        data-key="rzp_test_SYypqSe8o0hG0x" 
+        data-amount="{{payment.amount}}" 
+        data-currency="INR"
+        data-order id="{{payment.id}}"
+        data-buttontext=" Pay with Razorpay" 
+        data-name="Donation Corp" 
+        data-description="Test transaction" 
+        data-image="https://example.com/your_logo.jpg"
+        data-prefill.name =" Gauray Kumar" 
+        data prefill.email="gaurav.kumar@example.com"
+        data-prefill.contact="9999999999"
+        data-theme.color="#F37254"
+    ></script>
+    <input type="hidden" custome="Hidden Element" name="hidden">
+</form>
+
+{% endif %}
+{% endblock %}

@@ -152,3 +152,21 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'spidy2423@gmail.com'
 EMAIL_HOST_PASSWORD = 'kcud jgcx dewh cbyj' # Not your regular password!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+RAZORPAY_KEY_ID = 'rzp_test_SYypqSe8o0hG0x'
+RAZORPAY_KEY_SECRET = 'pu65jh4l769wVWDQw3Xm5yuA'

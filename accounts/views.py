@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from .forms import UserRegisterForm, UserUpdateForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout
 from core.models import Report
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.contrib.auth.views import PasswordChangeView
 from django.urls import reverse_lazy
@@ -11,7 +11,15 @@ from django.contrib.auth import get_user_model
 from core.models import OTPVerification
 from core.signals import send_verification_email
 import random
+import razorpay
+from django.conf import settings
+from core.models import Donation
+from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 
+
+
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 User = get_user_model()
 
 # Create your views here.
@@ -171,3 +179,117 @@ def resend_otp(request):
     # 3. Stay on the same verification page
     return redirect('verify_otp')
 
+
+
+def initiate_donation(request):
+    if request.method == "POST":
+        amount_in_rupees = int(request.POST.get('amount', 100))
+        amount_in_paise = amount_in_rupees * 100 
+        client = razorpay.Client(auth=("rzp_test_SYypqSe8o0hG0x", "pu65jh4l769wVWDQw3Xm5yuA"))
+
+        # Create Order
+        payment = client.order.create({'amount': amount_in_paise, 'currency': "INR", "payment_capture": "1"})
+        
+        # Save to DB
+        Donation.objects.create(
+            user=request.user, 
+            amount=amount_in_rupees, 
+            razorpay_order_id=payment['id'], 
+            status="Pending"
+        )
+        
+        # Pass 'payment' to the template
+        return render(request, 'donations/donate_form.html', {
+            'payment': payment, 
+            'amount_display': amount_in_rupees
+        })
+    
+    return render(request, 'donations/donate_form.html')
+
+
+@csrf_exempt
+def payment_success(request):
+    if request.method == "POST":
+        # Razorpay sends these 3 things automatically in the POST body
+        payment_id = request.POST.get('razorpay_payment_id')
+        order_id = request.POST.get('razorpay_order_id')
+        signature = request.POST.get('razorpay_signature')
+
+        # Find the donation record we created in initiate_donation
+        donation = Donation.objects.filter(razorpay_order_id=order_id).first()
+        
+        if donation:
+            donation.status = 'Success'
+            donation.razorpay_payment_id = payment_id
+            donation.razorpay_signature = signature
+            donation.save()
+            return render(request, 'donations/success.html', {'donation': donation})
+            
+    return render(request, 'donations/error.html', {'error': 'Invalid Request'})
+
+
+@user_passes_test(lambda u: u.is_staff)
+def admin_transaction_manager(request):
+    # 1. Get search and filter parameters from the URL
+    search_query = request.GET.get('search', '')
+    status_filter = request.GET.get('status', '')
+
+    # 2. Start with all donations
+    donations = Donation.objects.all().order_by('-created_at')
+
+    # 3. Apply Search (Check Email or Order ID)
+    if search_query:
+        donations = donations.filter(
+            Q(user__email__icontains=search_query) | 
+            Q(razorpay_order_id__icontains=search_query)
+        )
+
+    # 4. Apply Status Filter
+    if status_filter:
+        donations = donations.filter(status=status_filter)
+
+    # 5. Calculate stats based on the FULL (unfiltered) list for the cards
+    all_donations = Donation.objects.all()
+    total_revenue = sum(d.amount for d in all_donations if d.status == 'Success')
+    pending_count = all_donations.filter(status='Pending').count()
+
+    context = {
+        'donations': donations,
+        'total_revenue': total_revenue,
+        'pending_count': pending_count,
+        'search_query': search_query,
+        'status_filter': status_filter,
+    }
+    return render(request, 'accounts/admin_transactions.html', context)
+
+
+
+
+@user_passes_test(lambda u: u.is_staff)
+def sync_transaction(request, donation_id):
+    donation = get_object_or_404(Donation, id=donation_id)
+    
+    try:
+        # Fetch the order details directly from Razorpay
+        order_details = client.order.fetch(donation.razorpay_order_id)
+        # Fetch all payments associated with this order
+        payments = client.order.payments(donation.razorpay_order_id)
+
+        if payments['items']:
+            # Get the latest payment for this order
+            latest_payment = payments['items'][0]
+            
+            if latest_payment['status'] == 'captured':
+                donation.status = 'Success'
+                donation.razorpay_payment_id = latest_payment['id']
+                donation.save()
+                messages.success(request, f"Sync Successful: Payment {latest_payment['id']} captured.")
+            else:
+                messages.info(request, f"Sync complete: Payment status is {latest_payment['status']}.")
+        else:
+            messages.warning(request, "No payments found for this order on Razorpay yet.")
+
+    except Exception as e:
+        messages.error(request, f"Razorpay Sync Error: {str(e)}")
+
+    return redirect('admin_transactions')

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .success-card {
+        background: #ffffff;
+        border-radius: 30px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 3rem;
+        transition: transform 0.3s ease;
+    }
+    .success-card:hover {
+        transform: translateY(-5px);
+    }
+    .receipt-box {
+        background-color: #f8f9fa;
+        border: 1px dashed #dee2e6;
+        border-radius: 20px;
+    }
+    .confetti-icon {
+        background: #e6f4ea;
+        width: 100px;
+        height: 100px;
+        line-height: 100px;
+        border-radius: 50%;
+        margin: 0 auto;
+        color: #198754;
+    }
+    /* Hides the print button when actually printing the receipt */
+    @media print {
+        .no-print { display: none; }
+        .success-card { box-shadow: none; border: 1px solid #eee; }
+    }
+</style>
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 85vh;">
+    <div class="success-card text-center" style="max-width: 550px; width: 100%;">
+        
+        <div class="confetti-icon mb-4">
+            <i class="bi bi-shield-check" style="font-size: 3.5rem;"></i>
+        </div>
+
+        <h2 class="fw-bold text-dark">Transaction Confirmed</h2>
+        <p class="text-muted px-4">Great news, <strong>{{ request.user.first_name }}</strong>! Your donation has been processed successfully.</p>
+
+        <div class="receipt-box p-4 my-4 text-start">
+            <div class="d-flex justify-content-between mb-3 border-bottom pb-2">
+                <span class="text-secondary small text-uppercase fw-bold">Amount</span>
+                <span class="h5 mb-0 fw-bold text-success">₹{{ donation.amount }}</span>
+            </div>
+            
+            <div class="row mb-2">
+                <div class="col-5 text-secondary small">Payment ID</div>
+                <div class="col-7 text-end text-dark font-monospace" style="font-size: 0.85rem;">{{ donation.razorpay_payment_id }}</div>
+            </div>
+            
+            <div class="row mb-2">
+                <div class="col-5 text-secondary small">Order ID</div>
+                <div class="col-7 text-end text-dark font-monospace" style="font-size: 0.85rem;">{{ donation.razorpay_order_id }}</div>
+            </div>
+
+            <div class="row">
+                <div class="col-5 text-secondary small">Date & Time</div>
+                <div class="col-7 text-end text-dark small">{{ donation.created_at|date:"d M Y, h:i A" }}</div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-3 no-print">
+            <a href="{% url 'dashboard' %}" class="btn btn-danger btn-lg rounded-pill shadow-sm py-2 fw-bold">
+                Go to My Dashboard
+            </a>
+            <button onclick="window.print()" class="btn btn-link text-secondary text-decoration-none">
+                <i class="bi bi-printer me-2"></i>Download Receipt
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

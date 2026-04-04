@@ -29,6 +29,13 @@
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link p-2 rounded fw-semibold {% if request.resolver_match.url_name == 'admin_transactions' %}bg-danger text-white shadow-sm{% else %}text-muted{% endif %}" 
+                    href="{% url 'admin_transactions' %}">
+                        💰 Transactions
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link p-2 rounded fw-semibold {% if request.resolver_match.url_name == 'flagged_items' %}bg-danger text-white shadow-sm{% else %}text-muted{% endif %}" 
                     href="{% url 'flagged_items' %}">
                         🚩 Flagged Items

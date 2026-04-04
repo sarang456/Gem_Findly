@@ -14,4 +14,8 @@ urlpatterns = [
     path('deactivate/', views.deactivate_account, name='deactivate_account'),
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
+    path('donate/', views.initiate_donation, name='donate'),
+    path('donate/payment-success/', views.payment_success, name='payment_success'),
+    path('admin/transactions/', views.admin_transaction_manager, name='admin_transactions'),
+    path('admin/transactions/sync/<int:donation_id>/', views.sync_transaction, name='sync_transaction'),
 ]

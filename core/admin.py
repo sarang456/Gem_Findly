@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Item, Report, Match
+from .models import User, Item, Report, Match, Donation, OTPVerification, Category
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
@@ -57,3 +57,32 @@ class MatchAdmin(admin.ModelAdmin):
             return "-"
         return f"{int(obj.score * 100)}%"
     score_display.short_description = "Confidence"
+
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'icon')
+    search_fields = ('name',)
+
+@admin.register(OTPVerification)
+class OTPVerificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'otp_code', 'created_at', 'is_expired_status')
+    readonly_fields = ('otp_code', 'user', 'created_at') # Prevent manual tampering
+    
+    def is_expired_status(self, obj):
+        return obj.is_expired()
+    is_expired_status.boolean = True
+    is_expired_status.short_description = "Expired?"
+
+@admin.register(Donation)
+class DonationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'amount', 'status', 'created_at', 'razorpay_order_id')
+    list_filter = ('status', 'created_at')
+    search_fields = ('user__email', 'razorpay_order_id', 'razorpay_payment_id')
+    readonly_fields = ('razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature', 'created_at')
+    
+    # Color coding the status in admin
+    def save_model(self, request, obj, form, change):
+        # Optional: Add logic here if you want to perform actions on save
+        super().save_model(request, obj, form, change)
