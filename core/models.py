@@ -80,8 +80,32 @@ class Report(models.Model):
     is_flagged = models.BooleanField(default=False)
     flag_reason = models.TextField(blank=True, null=True)
 
+    reward_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
     def __str__(self):
         return f"{self.report_type.upper()}: {self.item.title}"
+    
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        if is_new:
+            # TRIGGER THE BRAIN
+            # Local import to prevent Circular Import Errors
+            try:
+                from .utils import run_matching_engine, analyze_image
+                
+                # 1. First, let AI tag the image if it exists
+                if self.item.image:
+                    tags = analyze_image(self.item.image)
+                    self.item.ai_tags = tags
+                    self.item.save()
+                
+                # 2. Run the matching engine
+                run_matching_engine(self)
+                print(f"DEBUG: Matching engine triggered for Report {self.id}")
+            except Exception as e:
+                print(f"DEBUG: Error triggering engine: {e}")
     
 class Match(models.Model):
     lost_report = models.ForeignKey(Report, on_delete=models.CASCADE, related_name='lost_matches')
@@ -165,3 +189,22 @@ class Donation(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - ₹{self.amount} ({self.status})"
+    
+
+
+# Update your Donation/Transaction Model
+class Transaction(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    match = models.ForeignKey('Match', on_delete=models.CASCADE, null=True, blank=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    razorpay_signature = models.CharField(max_length=150, blank=True, null=True)
+    status = models.CharField(max_length=20, default='Pending') 
+    is_disbursed = models.BooleanField(default=False)
+    
+    # ADD THIS LINE HERE:
+    created_at = models.DateTimeField(auto_now_add=True) 
+
+    def __str__(self):
+        return f"TXN {self.id} - {self.user.email} - ₹{self.amount}"

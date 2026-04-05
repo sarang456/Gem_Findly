@@ -18,3 +18,13 @@ class SmartReportForm(forms.Form):  # Changed from ModelForm to Form
     question_1 = forms.CharField(required=False, widget=forms.TextInput(attrs={'placeholder': 'Question 1', 'class': 'notion-input'}))
     question_2 = forms.CharField(required=False, widget=forms.TextInput(attrs={'placeholder': 'Question 2', 'class': 'notion-input'}))
     requires_photo_proof = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
+
+    reward_amount = forms.DecimalField(
+        required=False,
+        initial=0,
+        min_value=0,
+        widget=forms.NumberInput(attrs={
+            'class': 'notion-input',
+            'placeholder': 'Offer a reward? (Optional ₹)'
+        })
+    )

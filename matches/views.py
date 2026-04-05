@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from core.models import Report, Match
+from core.models import Report, Match, Transaction
 from django.db.models import Q
 from django.contrib import messages
+import razorpay
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 @login_required
@@ -264,3 +267,129 @@ def my_reports(request):
         'total_count': reports.count(),
         'active_count': reports.filter(is_resolved=False).count()
     })
+
+
+
+
+# Initialize Razorpay Client
+client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+@login_required
+def pay_reward(request, match_id):
+    match = get_object_or_404(Match, id=match_id)
+    
+    # BRUTAL SECURITY: Only the owner (loser) can pay the reward
+    if match.lost_report.user != request.user:
+        messages.error(request, "Unauthorized payment attempt.")
+        return redirect('dashboard')
+
+    amount = int(match.lost_report.reward_amount * 100) # Convert to Paise (Razorpay requirement)
+    
+    # 1. Create Razorpay Order
+    data = {
+        "amount": amount,
+        "currency": "INR",
+        "receipt": f"match_{match.id}",
+        "notes": {
+            "match_id": match.id,
+            "type": "reward_escrow"
+        }
+    }
+    
+    try:
+        razorpay_order = client.order.create(data=data)
+        
+        # 2. Create a "Pending" Transaction in our DB
+        transaction = Transaction.objects.create(
+            user=request.user,
+            match=match,
+            amount=match.lost_report.reward_amount,
+            razorpay_order_id=razorpay_order['id'],
+            status='Pending'
+        )
+        
+        return render(request, 'matches/pay_reward.html', {
+            'match': match,
+            'razorpay_order_id': razorpay_order['id'],
+            'razorpay_key': settings.RAZORPAY_KEY_ID,
+            'amount': match.lost_report.reward_amount,
+            'amount_paise': amount
+        })
+        
+    except Exception as e:
+        messages.error(request, f"Payment Gateway Error: {e}")
+        return redirect('dashboard')
+
+@login_required
+@csrf_exempt
+def payment_success_reward(request):
+    # This matches the 'data-handler' or the 'callback_url' from Razorpay
+    if request.method == "POST":
+        payment_id = request.POST.get('razorpay_payment_id')
+        order_id = request.POST.get('razorpay_order_id')
+        signature = request.POST.get('razorpay_signature')
+
+        # 1. Find our pending transaction
+        transaction = get_object_or_404(Transaction, razorpay_order_id=order_id)
+        
+        # 2. Verify Signature (Security Step)
+        params_dict = {
+            'razorpay_order_id': order_id,
+            'razorpay_payment_id': payment_id,
+            'razorpay_signature': signature
+        }
+
+        try:
+            client.utility.verify_payment_signature(params_dict)
+            
+            # 3. Success! Update Transaction & Match Status
+            transaction.status = 'Success'
+            transaction.razorpay_payment_id = payment_id
+            transaction.save()
+
+            # IMPORTANT: Update the match status so the Finder knows money is held
+            match = transaction.match
+            match.status = 'confirmed' # Or create a new status 'paid'
+            match.save()
+
+            messages.success(request, "Payment received! Findly is holding the reward in escrow.")
+            return redirect('dashboard')
+
+        except Exception:
+            transaction.status = 'Failed'
+            transaction.save()
+            messages.error(request, "Payment verification failed.")
+            return redirect('dashboard')
+        
+# matches/views.py
+
+@login_required
+def close_case(request, match_id):
+    if request.method == 'POST':
+        match = get_object_or_404(Match, id=match_id)
+        
+        # SECURITY: Only the person who LOST the item can release the money
+        if match.lost_report.user != request.user:
+            messages.error(request, "Unauthorized! Only the owner can confirm receipt.")
+            return redirect('dashboard')
+            
+        # 1. Update Match and Reports to 'Resolved'
+        match.status = 'returned'
+        match.save()
+        
+        match.found_report.is_resolved = True
+        match.found_report.save()
+        match.lost_report.is_resolved = True
+        match.lost_report.save()
+        
+        # 2. Find the successful payment
+        transaction = Transaction.objects.filter(match=match, status='Success').first()
+        
+        if transaction:
+            # We don't mark 'is_disbursed' as True yet. 
+            # This is the "Signal" to the Admin to pay the Finder.
+            messages.success(request, "Success! The case is closed. We have notified the admin to release your reward to the finder.")
+        else:
+            messages.success(request, "Case closed successfully!")
+
+        return redirect('dashboard')

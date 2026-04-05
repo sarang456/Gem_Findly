@@ -1,133 +1,189 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Findly | Report Item</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body class="bg-light">
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8 col-xl-7">
-                <div class="form-container p-4 p-md-5">
-                    <header class="text-center mb-5">
-                        <h1 class="fw-bold h2 mb-2">Create a New Report</h1>
-                        <p class="text-muted">Our AI matching engine will scan for details as soon as you submit.</p>
-                    </header>
 
-                    <form method="POST" enctype="multipart/form-data" id="reportForm">
-                        {% csrf_token %}
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
-                        <div class="form-section mb-5">
-                            <h5 class="section-title">General Information</h5>
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <label class="form-label">Report Type</label>
-                                    {{ form.report_type }}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+            <div class="form-container bg-white shadow-sm p-4 p-md-5" style="border-radius: 25px;">
+                <header class="text-center mb-5">
+                    <h1 class="fw-bold h2 mb-2">Create a New Report</h1>
+                    <p class="text-muted">Our AI matching engine will scan for details as soon as you submit.</p>
+                </header>
+
+                <form method="POST" enctype="multipart/form-data" id="reportForm">
+                    {% csrf_token %}
+
+                    <div class="form-section mb-5">
+                        <h5 class="section-title fw-bold mb-3">General Information</h5>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Report Type</label>
+                                {{ form.report_type }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Category</label>
+                                {{ form.category }} 
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Item Title</label>
+                                {{ form.title }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Detailed Description</label>
+                                {{ form.description }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section mb-5">
+                        <h5 class="section-title fw-bold mb-3">Item Appearance</h5>
+                        <div class="image-upload-wrapper p-4 text-center border rounded-3 bg-light">
+                            <label class="form-label d-block mb-3 fw-bold">Upload High Quality Image</label>
+                            {{ form.image }}
+                            <small class="text-muted d-block mt-2">AI uses the image to find matches based on color and shape.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-section mb-5">
+                        <h5 class="section-title fw-bold mb-3">Where was it seen?</h5>
+                        <div id="map" class="mb-4 shadow-sm" style="height: 350px; border-radius: 15px;"></div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label small fw-bold">Location Name (Landmark)</label>
+                            {{ form.location_name }}
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">{{ form.latitude }}</div>
+                            <div class="col-md-6">{{ form.longitude }}</div>
+                        </div>
+                    </div>
+
+                    <div id="finderSecuritySection" class="form-section mb-5 p-4 rounded-4 bg-white shadow-sm border border-primary-subtle" style="display: none;">
+                        <h5 class="section-title text-primary fw-bold">Owner Verification</h5>
+                        <p class="small text-muted mb-4">Ask questions that only the true owner can answer.</p>
+                        <div class="mb-4">{{ form.question_1 }}</div>
+                        <div class="mb-4">{{ form.question_2 }}</div>
+                        <div class="form-check form-switch d-flex align-items-center gap-3">
+                            <label class="form-check-label fw-bold small">Mandatory Photo Proof</label>
+                            {{ form.requires_photo_proof }}
+                        </div>
+                    </div>
+
+                    <div id="lostRewardSection" class="form-section mb-5 p-4 rounded-4 bg-light shadow-sm border border-warning-subtle" style="display: none;">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-warning-subtle p-2 rounded-3 me-3 text-warning">
+                                <i class="bi bi-cash-coin fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="section-title fw-bold mb-0">Offer a Reward</h5>
+                                <p class="small text-muted mb-0">Adding a reward increases the chances of getting your item back.</p>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">₹</span>
+                                    {{ form.reward_amount }}
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Category</label>
-                                    {{ form.category }} 
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Item Title</label>
-                                    {{ form.title }}
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">Detailed Description</label>
-                                    {{ form.description }}
+                                <small class="text-muted extra-small d-block mt-2">Findly holds the reward in escrow until you receive the item.</small>
+                            </div>
+                            <div class="col-md-6 mt-3 mt-md-0">
+                                <div class="p-2 bg-white rounded-3 border small text-muted">
+                                    <i class="bi bi-info-circle me-1"></i> Reward is optional. Set to 0 if not offering.
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="form-section mb-5">
-                            <h5 class="section-title">Item Appearance</h5>
-                            <div class="image-upload-wrapper p-4 text-center border rounded-3">
-                                <label class="form-label d-block mb-3 fw-bold">Upload High Quality Image</label>
-                                {{ form.image }}
-                                <small class="text-muted d-block mt-2">AI uses the image to find matches based on color and shape.</small>
-                            </div>
-                        </div>
-
-                        <div class="form-section mb-5">
-                            <h5 class="section-title">Where was it seen?</h5>
-                            <div id="map" class="mb-4"></div>
-                            <div class="col-12 mb-3">
-                                <label class="form-label">Location Name (Landmark)</label>
-                                {{ form.location_name }}
-                            </div>
-                            <div class="row g-3">
-                                <div class="col-md-6">{{ form.latitude }}</div>
-                                <div class="col-md-6">{{ form.longitude }}</div>
-                            </div>
-                        </div>
-
-                        <div id="finderSecuritySection" class="form-section mb-5 p-4 rounded-4 bg-white shadow-sm border border-primary-subtle" style="display: none;">
-                            <h5 class="section-title text-primary">Owner Verification</h5>
-                            <p class="small text-muted mb-4">Ask questions that only the true owner can answer.</p>
-
-                            <div class="mb-4">
-                                <label class="form-label">Security Question 1</label>
-                                {{ form.question_1 }}
-                            </div>
-
-                            <div class="mb-4">
-                                <label class="form-label">Security Question 2</label>
-                                {{ form.question_2 }}
-                            </div>
-
-                            <div class="form-check form-switch p-0 d-flex align-items-center gap-3">
-                                <label class="form-check-label fw-bold small" for="{{ form.requires_photo_proof.id_for_label }}">
-                                    Mandatory Photo Proof from Claimer
-                                </label>
-                                {{ form.requires_photo_proof }}
-                            </div>
-                        </div>
-
-                        <div class="pt-4 border-top">
-                            <button type="submit" class="btn-submit">Launch Search & Save Report</button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="pt-4 border-top">
+                        <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow">
+                            Launch Search & Save Report
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Map Logic with slight delay to ensure container size is ready
-        var map = L.map('map').setView([20.5937, 78.9629], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        var marker;
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-        map.on('click', function (e) {
-            if (marker) { marker.setLatLng(e.latlng); }
-            else { marker = L.marker(e.latlng).addTo(map); }
-            document.getElementById('id_latitude').value = e.latlng.lat.toFixed(6);
-            document.getElementById('id_longitude').value = e.latlng.lng.toFixed(6);
-        });
+<script>
+    // Map & Geocoder Logic
+    var map = L.map('map').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    var marker;
 
-        // Refined Toggle Logic
-        const reportTypeSelect = document.querySelector('select[name="report_type"]');
-        const securitySection = document.getElementById('finderSecuritySection');
+    var geocoder = L.Control.geocoder({
+        defaultMarkGeocode: false,
+        placeholder: "Search location...",
+        suggest: true, 
+        minLength: 3
+    })
+    .on('markgeocode', function(e) {
+        var latlng = e.geocode.center;
+        map.flyTo(latlng, 18, { animate: true, duration: 1.5 });
 
-        function toggleSecurity() {
-            if (reportTypeSelect.value === 'found') {
-                securitySection.style.display = 'block';
-            } else {
-                securitySection.style.display = 'none';
-            }
+        if (marker) { marker.setLatLng(latlng); }
+        else { marker = L.marker(latlng).addTo(map); }
+
+        document.getElementById('id_latitude').value = latlng.lat.toFixed(6);
+        document.getElementById('id_longitude').value = latlng.lng.toFixed(6);
+        
+        var locationInput = document.querySelector('input[name="location_name"]');
+        if (locationInput) { locationInput.value = e.geocode.name; }
+    })
+    .addTo(map);
+
+    map.on('click', function (e) {
+        if (marker) { marker.setLatLng(e.latlng); }
+        else { marker = L.marker(e.latlng).addTo(map); }
+        document.getElementById('id_latitude').value = e.latlng.lat.toFixed(6);
+        document.getElementById('id_longitude').value = e.latlng.lng.toFixed(6);
+    });
+
+    // Toggle logic for Found Items
+    // Toggle logic for Dynamic Sections
+    const reportTypeSelect = document.querySelector('select[name="report_type"]');
+    const securitySection = document.getElementById('finderSecuritySection');
+    const rewardSection = document.getElementById('lostRewardSection');
+
+    function toggleDynamicSections() {
+        const val = reportTypeSelect ? reportTypeSelect.value : '';
+        
+        if (val === 'found') {
+            // Finder logic: show questions, hide reward
+            securitySection.style.display = 'block';
+            rewardSection.style.display = 'none';
+            
+            // Reset reward to 0 if they switched from Lost to Found
+            const rewardInput = document.querySelector('input[name="reward_amount"]');
+            if(rewardInput) rewardInput.value = 0;
+
+        } else if (val === 'lost') {
+            // Loser logic: hide questions, show reward
+            securitySection.style.display = 'none';
+            rewardSection.style.display = 'block';
+        } else {
+            // Default: hide everything
+            securitySection.style.display = 'none';
+            rewardSection.style.display = 'none';
         }
+    }
 
-        reportTypeSelect.addEventListener('change', toggleSecurity);
-        window.onload = () => {
-            toggleSecurity();
-            setTimeout(() => { map.invalidateSize(); }, 500);
-        };
-    </script>
-</body>
-</html>
+    if (reportTypeSelect) {
+        reportTypeSelect.addEventListener('change', toggleDynamicSections);
+    }
+
+    // Initial call on load
+    window.onload = () => {
+        toggleDynamicSections();
+        setTimeout(() => { map.invalidateSize(); }, 500);
+    };
+</script>
+{% endblock %}

@@ -35,6 +35,7 @@ def create_report(request):
                         location_name=form.cleaned_data['location_name'],
                         latitude=form.cleaned_data['latitude'],
                         longitude=form.cleaned_data['longitude'],
+                        reward_amount=form.cleaned_data.get('reward_amount', 0),
                         question_1=form.cleaned_data.get('question_1'),
                         question_2=form.cleaned_data.get('question_2'),
                         requires_photo_proof=form.cleaned_data.get('requires_photo_proof', False)

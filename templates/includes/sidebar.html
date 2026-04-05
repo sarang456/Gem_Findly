@@ -1,47 +1,13 @@
-<nav class="col-md-2 d-none d-md-block bg-white border-end pt-4 min-vh-100 shadow-sm p-0">
-    <div class="sticky-sidebar px-3">
-        
-        <h6 class="text-muted text-uppercase small fw-bold mb-3 opacity-50">Main Menu</h6>
-        <ul class="nav flex-column gap-1">
-            <li class="nav-item">
-                <a class="nav-link p-2 rounded fw-semibold {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-danger text-white{% else %}text-dark{% endif %}" href="{% url 'admin_dashboard' %}">
-                    🏠 Dashboard
-                </a>
-            </li>
-        </ul>
-
-        {% if user.is_staff %}
-            <hr>
-            <h6 class="text-primary text-uppercase small fw-bold mb-3">Admin Control</h6>
-            <ul class="nav flex-column gap-1">
-                <li class="nav-item">
-                    <a class="nav-link p-2 rounded fw-semibold {% if request.resolver_match.url_name == 'all_reports_list' %}bg-danger text-white shadow-sm{% else %}text-muted{% endif %}" 
-                    href="{% url 'all_reports_list' %}">
-                        📊 All Reports
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link p-2 rounded fw-semibold {% if request.resolver_match.url_name == 'manage_users' %}bg-danger text-white shadow-sm{% else %}text-muted{% endif %}" 
-                    href="{% url 'manage_users' %}">
-                        👥 Manage Users
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link p-2 rounded fw-semibold {% if request.resolver_match.url_name == 'admin_transactions' %}bg-danger text-white shadow-sm{% else %}text-muted{% endif %}" 
-                    href="{% url 'admin_transactions' %}">
-                        💰 Transactions
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link p-2 rounded fw-semibold {% if request.resolver_match.url_name == 'flagged_items' %}bg-danger text-white shadow-sm{% else %}text-muted{% endif %}" 
-                    href="{% url 'flagged_items' %}">
-                        🚩 Flagged Items
-                    </a>
-                </li>
-            </ul>
-        {% endif %}
-    </div>
+<nav class="col-md-3 col-lg-2 d-none d-md-block bg-white border-end pt-4 min-vh-100 shadow-sm p-0">
+    {% include "includes/sidebar_content.html" %}
 </nav>
+
+<div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="adminSidebar" style="width: 280px;">
+    <div class="offcanvas-header border-bottom">
+        <h5 class="offcanvas-title fw-bold text-danger">findly. Admin</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        {% include "includes/sidebar_content.html" %}
+    </div>
+</div>

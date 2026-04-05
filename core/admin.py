@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Item, Report, Match, Donation, OTPVerification, Category
+from .models import User, Item, Report, Match, Donation, OTPVerification, Category, Transaction
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
@@ -86,3 +86,24 @@ class DonationAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         # Optional: Add logic here if you want to perform actions on save
         super().save_model(request, obj, form, change)
+
+# core/admin.py
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    # Filter for Success but NOT yet disbursed
+    list_display = ('id', 'get_finder_email', 'amount', 'status', 'is_disbursed', 'created_at')
+    list_filter = ('is_disbursed', 'status')
+    
+    # This helps the admin see WHO to pay
+    def get_finder_email(self, obj):
+        if obj.match:
+            return obj.match.found_report.user.email
+        return "No Match"
+    get_finder_email.short_description = 'Pay to Finder'
+
+    # Action to mark as paid once you send the UPI
+    actions = ['mark_as_paid']
+
+    def mark_as_paid(self, request, queryset):
+        queryset.update(is_disbursed=True)
+        self.message_user(request, "Marked as paid. Ensure you actually sent the UPI/Bank transfer!")

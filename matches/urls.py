@@ -13,4 +13,7 @@ urlpatterns = [
     path('match/resolve/<int:match_id>/', views.resolve_match, name='resolve_match'),
     path('match/public/<int:match_id>/', views.match_detail_public, name='match_detail_public'),
     path('my-reports/', views.my_reports, name='user_reports'),
+    path('match/<int:match_id>/pay-reward/', views.pay_reward, name='pay_reward'),
+    path('payment-success-reward/', views.payment_success_reward, name='payment_success_reward'),
+    path('match/<int:match_id>/close/', views.close_case, name='close_case'),
 ]

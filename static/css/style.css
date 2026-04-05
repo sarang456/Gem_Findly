@@ -1,4 +1,4 @@
-/* 1. VARIABLES - No duplicates allowed */
+/* 1. VARIABLES & BASE */
 :root {
     --notion-bg: #ffffff;
     --notion-text: #37352f;
@@ -8,9 +8,9 @@
     --ebay-blue: #0053a0;
     --fb-blue: #1877F2;
     --light-border: #e5e5e5;
+    --findly-red: #dc3545;
 }
 
-/* 2. BASE STYLES */
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     color: var(--notion-text);
@@ -18,243 +18,93 @@ body {
     line-height: 1.6;
 }
 
-/* 3. LAYOUT & SPACING - Improving margins as requested */
+/* 2. LAYOUT & CONTAINERS */
 .form-container {
     background: var(--notion-bg);
     border-radius: 20px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.03);
     border: 1px solid var(--light-border);
-    margin-bottom: 3rem; /* Better bottom margin */
+    margin-bottom: 3rem;
 }
 
 .form-section {
-    margin-bottom: 2.5rem; /* Breathing room between sections */
+    margin-bottom: 2.5rem;
 }
 
-/* 4. COMPONENTS */
-.verification-card {
-    background: var(--notion-bg);
-    border-radius: 16px;
-    border: 1px solid var(--light-border);
+/* 3. NAVIGATION (NAVBAR & SEARCH) */
+.search-container {
+    width: 45%;
+    max-width: 520px;
 }
 
-.notion-input {
+.findly-search-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8f9fa;
+    border: 1px solid #e4e7ec;
+    border-radius: 999px;
+    padding: 5px 6px 5px 14px;
     width: 100%;
-    border: 1.5px solid var(--light-border);
-    background: #fcfcfc;
-    color: var(--notion-text);
-    padding: 12px 16px;
-    border-radius: 10px;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
 }
 
-.notion-input:focus {
+.findly-search-pill:hover, .findly-search-pill:focus-within {
+    background: #ffffff;
+    border-color: var(--findly-red);
+}
+
+.findly-search-pill:focus-within {
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.08);
+}
+
+.findly-input {
+    flex: 1;
+    border: none;
     outline: none;
-    border-color: var(--ebay-blue);
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(0, 83, 160, 0.1);
+    background: transparent;
+    padding: 8px 10px;
+    font-size: 0.9rem;
 }
 
-.btn-airbnb {
-    background-color: var(--airbnb-red);
+.findly-search-btn {
+    background: linear-gradient(135deg, var(--findly-red), #b02a37);
     color: white;
     border: none;
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
     font-weight: 600;
-    padding: 16px 24px; /* Slightly taller for better feel */
-    border-radius: 12px;
-    width: 100%;
+    cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.btn-airbnb:hover {
-    background-color: var(--airbnb-hover);
+.findly-search-btn:hover {
     transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.25);
 }
 
-/* 5. MAP STYLES - Forced Visibility */
-#map {
-    height: 400px !important;
-    width: 100% !important;
-    min-height: 400px !important;
-    background: #e5e7eb;
-    position: relative;
-    display: block !important;
-    border: 1px solid var(--light-border);
-    border-radius: 16px;
-    margin-bottom: 1.5rem;
-    z-index: 1; /* Keeping it below dropdowns but visible */
-}
-
-.leaflet-container {
-    z-index: 10 !important;
-}
-
-/* 6. MISC */
-.section-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 1.25rem;
-    color: #111827;
-}
-
-/* 7. CLAIM CHALLENGE & REVIEW STYLES */
-
-/* Ownership Challenge Card Override */
-.card.shadow-lg.rounded-4 {
-    border: 1px solid var(--light-border) !important;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.05) !important;
-}
-
-/* Question Styling - Make the text feel important */
-.form-label.fw-bold {
-    color: var(--notion-text);
-    font-size: 0.95rem;
-    margin-bottom: 0.75rem;
-    display: block;
-}
-
-/* Standardizing Textareas to match your .notion-input */
-textarea.form-control {
-    border: 1.5px solid var(--light-border) !important;
-    background: #fcfcfc !important;
-    padding: 12px 16px !important;
-    border-radius: 12px !important;
-}
-
-textarea.form-control:focus {
-    border-color: var(--ebay-blue) !important;
-    box-shadow: 0 0 0 3px rgba(0, 83, 160, 0.1) !important;
-    background: #fff !important;
-}
-
-/* Claim Review Header */
-.bg-primary {
-    background-color: var(--ebay-blue) !important;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-/* Styling the answers provided by the loser */
-.bg-light.rounded-3 {
-    background-color: var(--notion-grey) !important;
-    border: 1px solid var(--light-border);
-    color: var(--notion-text);
-    font-style: italic; /* Distinguishes user input from field labels */
-}
-
-/* Photo Proof Container */
-.proof-container {
-    border: 2px dashed var(--light-border);
-    padding: 10px;
-    border-radius: 16px;
-    background: #fff;
-}
-
-/* Buttons for Accept/Reject */
-.btn-success.rounded-pill {
-    background-color: #2ecc71 !important;
-    border: none !important;
-    transition: all 0.2s;
-}
-
-.btn-success.rounded-pill:hover {
-    background-color: #27ae60 !important;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
-}
-
-.btn-outline-danger.rounded-pill {
-    border: 1.5px solid #e74c3c !important;
-    color: #e74c3c !important;
-}
-
-.btn-outline-danger.rounded-pill:hover {
-    background-color: #e74c3c !important;
-    color: white !important;
-}
-
-/* Responsive Image handling */
-img.rounded-4 {
-    transition: transform 0.3s ease;
-}
-
-img.rounded-4:hover {
-    transform: scale(1.02); /* Subtle zoom for the finder to see details */
-}
-textarea.notion-input {
-    min-height: 120px;
-    resize: vertical; /* Allows user to grow it down, but not sideways */
-    display: block;
-    width: 100%;
-}
-
-/* Avatar Circle */
-.avatar-circle {
-    width: 35px;
-    height: 35px;
-    background-color: #5f6368; /* Google Gray */
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-weight: bold;
-    font-size: 0.9rem;
-    transition: filter 0.2s;
-}
-
-.avatar-circle:hover {
-    filter: brightness(0.9);
-}
-
-/* Large Avatar in Dropdown */
-.avatar-circle-large {
-    width: 60px;
-    height: 60px;
-    background-color: #1a73e8; /* Google Blue */
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-size: 1.5rem;
-    font-weight: bold;
-}
-
-.dropdown-item:hover {
-    background-color: #f8f9fa;
-    color: #1a73e8;
-}
-
-.x-small {
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-}
-
-
-/* Sidebar Core Styles */
+/* 4. SIDEBAR LOGIC */
 #sidebar-wrapper {
     min-width: 280px;
     max-width: 280px;
     min-height: 100vh;
-    transition: all 0.3s;
     z-index: 1000;
 }
 
-/* The Secret Sauce for Stickiness */
 .sticky-sidebar {
-    position: -webkit-sticky;
     position: sticky;
     top: 0;
     height: 100vh;
-    overflow-y: auto; /* Allows sidebar to scroll internally if links exceed screen height */
-    scrollbar-width: none; /* Firefox: hide scrollbar */
+    overflow-y: auto;
+    padding-top: 1.5rem;
+    scrollbar-width: none; /* Firefox */
 }
 
 .sticky-sidebar::-webkit-scrollbar {
-    display: none; /* Chrome/Safari: hide scrollbar */
+    display: none; /* Chrome/Safari */
 }
 
-/* Sidebar Styling - Matching your 'Findly' dark/minimalist theme */
 .sidebar-link {
     display: flex;
     align-items: center;
@@ -277,142 +127,58 @@ textarea.notion-input {
     color: #fff !important;
 }
 
-.sidebar-link i {
-    font-size: 1.2rem;
-    margin-right: 15px;
+/* 5. COMPONENTS & CARDS */
+.item-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.sticky-sidebar {
-    position: sticky;
-    top: 0;
-    /* This ensures the sidebar is as tall as the screen but no more */
-    height: 100vh; 
-    /* This allows the sidebar to scroll if you add too many links later */
-    overflow-y: auto; 
-    padding-top: 1.5rem;
+.item-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
 }
 
-/* Optional: Hide the scrollbar for a cleaner look */
-.sticky-sidebar::-webkit-scrollbar {
-    display: none;
+.filter-card {
+    transition: all 0.3s ease;
 }
 
-/* Container */
-.search-container {
-    width: 45%;
-    max-width: 520px;
+.filter-card:hover {
+    border-color: #dee2e6 !important;
 }
 
-/* Pill Wrapper */
-.findly-search-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f8f9fa;
-    border: 1px solid #e4e7ec;
-    border-radius: 999px;
-    padding: 5px 6px 5px 14px;
+.notion-input, textarea.form-control {
     width: 100%;
-
-    transition: all 0.25s ease;
-}
-
-/* Hover effect (adds depth) */
-.findly-search-pill:hover {
-    border-color: #cfd4da;
-    background: #ffffff;
-}
-
-/* Icon */
-.search-icon {
-    color: #98a2b3;
-    font-size: 0.95rem;
-    transition: color 0.2s ease;
-}
-
-/* Input */
-.findly-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-
-    padding: 8px 10px;
-    font-size: 0.9rem;
-    color: #1d2939;
-}
-
-/* Placeholder */
-.findly-input::placeholder {
-    color: #98a2b3;
-    font-weight: 400;
-}
-
-/* Button */
-.findly-search-btn {
-    background: linear-gradient(135deg, #dc3545, #b02a37);
-    color: white;
-    border: none;
-    border-radius: 999px;
-
-    padding: 8px 18px;
-    font-size: 0.85rem;
-    font-weight: 600;
-
-    cursor: pointer;
+    border: 1.5px solid var(--light-border);
+    background: #fcfcfc;
+    padding: 12px 16px;
+    border-radius: 10px;
     transition: all 0.2s ease;
 }
 
-/* Button hover */
-.findly-search-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.25);
+.notion-input:focus, textarea.form-control:focus {
+    outline: none;
+    border-color: var(--ebay-blue);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(0, 83, 160, 0.1);
 }
 
-/* Active click */
-.findly-search-btn:active {
-    transform: scale(0.97);
+/* 6. USER PROFILE & AVATARS */
+.avatar-circle {
+    width: 35px;
+    height: 35px;
+    background-color: #5f6368;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.9rem;
 }
 
-/* Focus state (MAIN UX IMPROVEMENT) */
-.findly-search-pill:focus-within {
-    background: #ffffff;
-    border-color: #dc3545;
-    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.08);
-}
-
-/* Icon reacts on focus */
-.findly-search-pill:focus-within .search-icon {
-    color: #dc3545;
-}
-
-.findly-input:focus::placeholder {
-    opacity: 0.5;
-}
-
-
-
-
-/* 1. Force the card to stay centered and small */
-.profile-container {
-    max-width: 650px;
-    margin: 40px auto;
-}
-
-/* 2. Create a clean, centered header */
-.profile-header-main {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #eee;
-    padding: 40px 20px;
-    text-align: center;
-    border-radius: 16px 16px 0 0;
-}
-
-/* 3. Fix the Avatar */
-.avatar-badge {
+.avatar-badge, .avatar-circle-large {
     width: 80px;
     height: 80px;
-    background: #dc3545; /* Findly Red */
+    background: var(--findly-red);
     color: white;
     font-size: 2rem;
     font-weight: bold;
@@ -424,20 +190,23 @@ textarea.notion-input {
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* 4. Stats Row styling */
-.profile-stats-bar {
-    display: flex;
-    justify-content: space-around;
-    padding: 20px 0;
-    background: #fff;
-    border-bottom: 1px solid #eee;
+/* 7. MAPS */
+#map {
+    height: 400px !important;
+    width: 100% !important;
+    background: #e5e7eb;
+    border-radius: 16px;
+    z-index: 1;
 }
 
-.stat-box {
-    text-align: center;
-    flex: 1;
+/* 8. UTILITIES */
+.extra-small, .x-small {
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
 }
 
-.stat-box:not(:last-child) {
-    border-right: 1px solid #eee;
+.transition-hover:hover {
+    opacity: 0.7;
+    transform: rotate(-5deg);
 }
+

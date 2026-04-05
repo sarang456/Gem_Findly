@@ -5,69 +5,85 @@
     <div class="row g-5">
         <div class="col-md-3">
             <div class="sticky-top" style="top: 100px;">
-                <h5 class="fw-bold mb-4 d-flex align-items-center">
-                    <i class="bi bi-sliders2 me-2"></i> Filter by
-                </h5>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold m-0 d-flex align-items-center">
+                        <i class="bi bi-filter-left fs-4 me-2"></i> Filters
+                    </h5>
+                    {% if current_type or current_location or current_sort %}
+                    <a href="{% url 'listings' %}" class="text-danger small fw-bold text-decoration-none transition-hover">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </a>
+                    {% endif %}
+                </div>
 
-                <div class="mb-4">
-                    <label class="section-title mb-2">I am looking for...</label>
-                    <div class="btn-group w-100" role="group">
-                        <a href="{% url 'listings' %}"
-                            class="btn btn-outline-dark btn-sm rounded-start-pill {% if not current_type %}active{% endif %}">
-                            All
+                <div class="filter-card p-4 bg-white shadow-sm rounded-4 border mb-4">
+                    <label class="small fw-bold text-uppercase text-secondary mb-3 d-block" style="letter-spacing: 1px;">Report Type</label>
+                    <div class="nav flex-column nav-pills gap-2">
+                        <a href="{% url 'listings' %}" 
+                        class="nav-link py-2 px-3 small rounded-3 {% if not current_type %}bg-dark text-white shadow-sm{% else %}text-dark bg-light{% endif %}">
+                            <i class="bi bi-grid-fill me-2"></i> All Items
                         </a>
-                        <a href="?type=lost{% if current_location %}&location={{ current_location }}{% endif %}"
-                            class="btn btn-outline-danger btn-sm {% if current_type == 'lost' %}active{% endif %}">
-                            Lost
+                        <a href="?type=lost{% if current_location %}&location={{ current_location }}{% endif %}" 
+                        class="nav-link py-2 px-3 small rounded-3 {% if current_type == 'lost' %}bg-danger text-white shadow-sm{% else %}text-dark bg-light{% endif %}">
+                            <i class="bi bi-exclamation-circle me-2"></i> Lost Items
                         </a>
-                        <a href="?type=found{% if current_location %}&location={{ current_location }}{% endif %}"
-                            class="btn btn-outline-success btn-sm rounded-end-pill {% if current_type == 'found' %}active{% endif %}">
-                            Found
+                        <a href="?type=found{% if current_location %}&location={{ current_location }}{% endif %}" 
+                        class="nav-link py-2 px-3 small rounded-3 {% if current_type == 'found' %}bg-success text-white shadow-sm{% else %}text-dark bg-light{% endif %}">
+                            <i class="bi bi-check-circle me-2"></i> Found Items
                         </a>
                     </div>
-                </div>
 
-                <div class="mb-4">
-                    <label class="section-title mb-2">Location</label>
+                    <label class="small fw-bold text-uppercase text-secondary mt-4 mb-3 d-block" style="letter-spacing: 1px;">Location</label>
                     <form method="GET" action="{% url 'listings' %}">
                         {% if current_type %}<input type="hidden" name="type" value="{{ current_type }}">{% endif %}
-                        {% if current_sort %}<input type="hidden" name="sort" value="{{ current_sort }}">{% endif %}
-
-                        <div class="position-relative">
-                            <i class="bi bi-geo-alt position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                            <input type="text" name="location" class="notion-input ps-5"
-                                placeholder="Search location..." value="{{ current_location|default:'' }}">
+                        <div class="input-group bg-light rounded-3 overflow-hidden border-0">
+                            <span class="input-group-text bg-transparent border-0 pe-0"><i class="bi bi-geo-alt text-muted"></i></span>
+                            <input type="text" name="location" class="form-control bg-transparent border-0 small py-2" 
+                                placeholder="Ex: Ahmedabad..." value="{{ current_location|default:'' }}">
                         </div>
                     </form>
-                </div>
-
-                <div class="d-grid">
-                    <a href="{% url 'listings' %}" class="btn btn-outline-dark rounded-pill fw-bold btn-sm">
-                        <i class="bi bi-x-circle me-1"></i> Clear All Filters
-                    </a>
                 </div>
             </div>
         </div>
 
         <div class="col-md-9">
-            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
-                    <h2 class="fw-bold h4 mb-0">{{ reports.count }} items reported</h2>
-                    <p class="text-muted small mb-0">Unresolved Items</p>
+                    <h2 class="fw-bold h4 mb-1">{{ reports.count }} Results Found</h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0 extra-small">
+                            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">Listings</a></li>
+                            <li class="breadcrumb-item active text-danger" aria-current="page">
+                                {% if current_type %}{{ current_type|title }}{% else %}All{% endif %} Items
+                            </li>
+                        </ol>
+                    </nav>
                 </div>
                 
-                <div class="d-flex gap-2">
-                    <select class="form-select border-0 shadow-sm rounded-pill px-3 py-2 small w-auto"
-                        onchange="location = this.value;">
-                        <option value="?sort=newest{% if current_type %}&type={{ current_type }}{% endif %}{% if current_location %}&location={{ current_location }}{% endif %}" 
-                        {% if current_sort == 'newest' %}selected{% endif %}>
-                            Newest First
-                        </option>
-                        <option value="?sort=oldest{% if current_type %}&type={{ current_type }}{% endif %}{% if current_location %}&location={{ current_location }}{% endif %}" 
-                        {% if current_sort == 'oldest' %}selected{% endif %}>
-                            Oldest First
-                        </option>
-                    </select>
+                <div class="dropdown">
+                    <button class="btn btn-white bg-white shadow-sm rounded-pill px-4 py-2 border d-flex align-items-center gap-2" 
+                            type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-sort-down text-danger"></i>
+                        <span class="small fw-bold text-dark">
+                            Sort: {% if current_sort == 'oldest' %}Oldest{% else %}Newest{% endif %}
+                        </span>
+                        <i class="bi bi-chevron-down small text-muted ms-1"></i>
+                    </button>
+                    
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-2 mt-2" aria-labelledby="sortDropdown">
+                        <li>
+                            <a class="dropdown-item rounded-3 py-2 small {% if current_sort != 'oldest' %}bg-light fw-bold{% endif %}" 
+                            href="?sort=newest{% if current_type %}&type={{ current_type }}{% endif %}{% if current_location %}&location={{ current_location }}{% endif %}">
+                                <i class="bi bi-clock-history me-2"></i> Newest First
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item rounded-3 py-2 small {% if current_sort == 'oldest' %}bg-light fw-bold{% endif %}" 
+                            href="?sort=oldest{% if current_type %}&type={{ current_type }}{% endif %}{% if current_location %}&location={{ current_location }}{% endif %}">
+                                <i class="bi bi-hourglass me-2"></i> Oldest First
+                            </a>
+                        </li>
+                    </ul>
                 </div>
             </div>
 

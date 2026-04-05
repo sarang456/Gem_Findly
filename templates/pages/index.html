@@ -11,21 +11,21 @@
         <p class="lead fw-normal mb-4 px-md-5">The campus network where AI connects lost treasures with their owners in
             seconds.</p>
 
-        <form action="{% url 'listings' %}" method="GET"
-            class="bg-white rounded-pill p-1 shadow-lg mt-4 d-flex align-items-center mx-auto"
-            style="max-width: 600px; height: 58px; border: 1px solid rgba(0,0,0,0.1);">
+       <form action="{% url 'listings' %}" method="GET"
+            class="glass-search rounded-pill shadow-lg mt-5 d-flex align-items-center mx-auto p-2"
+            style="max-width: 650px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
 
-            <div class="ps-3 pe-2 text-muted">
-                <i class="bi bi-search"></i>
+            <div class="ps-3 pe-2 text-danger">
+                <i class="bi bi-search fs-5"></i>
             </div>
 
-            <input type="text" name="q" class="flex-grow-1 border-0 bg-transparent text-dark px-2"
-                placeholder="What are you looking for?"
-                style="outline: none; box-shadow: none; font-size: 1rem; min-width: 0;">
+            <input type="text" name="q" class="flex-grow-1 border-0 bg-transparent text-dark px-3 fw-medium"
+                placeholder="Search for 'blue wallet' or 'iPhone'..."
+                style="outline: none; box-shadow: none; font-size: 1.1rem;">
 
-            <button type="submit" class="btn btn-danger rounded-pill h-100 fw-bold btn-airbnb flex-shrink-0"
-                style="width: auto !important; padding: 0 30px !important; margin: 0 !important; background-color: #FF385C;">
-                Search
+            <button type="submit" class="btn btn-danger rounded-pill px-4 py-2 fw-bold transition-hover shadow-sm"
+                style="background-color: #FF385C; border: none; height: 48px;">
+                Find it Now
             </button>
         </form>
 
@@ -45,26 +45,32 @@
         <h2 class="fw-bold">How Findly Works</h2>
         <div class="bg-danger mx-auto" style="width: 50px; height: 3px; border-radius: 2px;"></div>
     </div>
-    <div class="row text-center g-4">
+    <div class="row g-4 mt-2">
         <div class="col-md-4">
-            <div class="p-4 card border-0 h-100">
-                <div class="feature-icon-circle bg-danger-subtle text-danger mb-3 mx-auto">1</div>
-                <h5 class="fw-bold">Report</h5>
-                <p class="text-muted small">Post your item. Our AI analyzes photos and text to extract key details.</p>
+            <div class="p-4 border-0 h-100 transition-hover text-center">
+                <div class="icon-box bg-danger-subtle text-danger mb-4 shadow-sm mx-auto">
+                    <i class="bi bi-megaphone-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark">1. Report</h5>
+                <p class="text-muted px-lg-3">Snap a photo. Our AI scans the image to identify colors, shapes, and text instantly.</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="p-4 card border-0 h-100">
-                <div class="feature-icon-circle bg-primary-subtle text-primary mb-3 mx-auto">2</div>
-                <h5 class="fw-bold">Match</h5>
-                <p class="text-muted small">Our algorithm finds potential matches across the campus instantly.</p>
+            <div class="p-4 border-0 h-100 transition-hover text-center">
+                <div class="icon-box bg-primary-subtle text-primary mb-4 shadow-sm mx-auto">
+                    <i class="bi bi-cpu-fill"></i>
+                </div>
+                <h5 class="fw-bold text-dark">2. Match</h5>
+                <p class="text-muted px-lg-3">The matching engine scans GPS coordinates to find items lost nearby.</p>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="p-4 card border-0 h-100">
-                <div class="feature-icon-circle bg-success-subtle text-success mb-3 mx-auto">3</div>
-                <h5 class="fw-bold">Recover</h5>
-                <p class="text-muted small">Verify ownership through secure questions and coordinate the return.</p>
+            <div class="p-4 border-0 h-100 transition-hover text-center">
+                <div class="icon-box bg-success-subtle text-success mb-4 shadow-sm mx-auto">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h5 class="fw-bold text-dark">3. Recover</h5>
+                <p class="text-muted px-lg-3">Answer secure owner-only questions to verify your identity and get your item back.</p>
             </div>
         </div>
     </div>
@@ -143,7 +149,8 @@
 
 <style>
     .hero-glass {
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.5s ease;
     }
 
     .btn-airbnb {
@@ -168,16 +175,45 @@
     }
 
     .item-card {
-        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.05) !important;
     }
 
-    .item-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+    .item-card:hover .image-hover-zoom img {
+        transform: scale(1.1);
     }
 
     .x-small {
         font-size: 0.75rem;
+    }
+
+
+    .icon-box {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        transition: all 0.3s ease;
+    }
+
+
+    .transition-hover:hover .icon-box {
+        transform: rotate(-10deg) scale(1.1);
+    }
+
+    .image-hover-zoom {
+        overflow: hidden;
+    }
+
+    .image-hover-zoom img {
+        transition: transform 0.5s ease;
+    }
+
+    .glass-search:focus-within {
+        box-shadow: 0 0 0 5px rgba(255, 56, 92, 0.15) !important;
+        transform: translateY(-2px);
     }
 </style>
 

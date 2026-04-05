@@ -3,9 +3,19 @@
     <div class="container">
         <a class="navbar-brand fw-bold text-danger fs-3 me-4" href="{% url 'home' %}">findly.</a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+
+            {% if user.is_staff %}
+            <button class="btn btn-sm btn-outline-danger d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar">
+                <i class="bi bi-layout-sidebar-inset"></i> Menu
+            </button>
+            {% endif %}
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+        </div>
 
         <div class="collapse navbar-collapse" id="navbarNav">
             
@@ -75,9 +85,24 @@
                         </div>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 p-3 mt-2" style="width: 280px;">
-                        <li class="text-center py-2">
-                            <h6 class="fw-bold mb-0 small">{% if user.first_name %}{{ user.first_name }}{% else %}User{% endif %}</h6>
-                            <p class="text-muted mb-0" style="font-size: 0.75rem;">{{ user.email }}</p>
+                        <li class="py-3 d-flex flex-column align-items-center justify-content-center">
+
+                            <!-- Avatar Circle -->
+                            <div class="avatar-circle shadow-sm mb-2"
+                                style="width: 55px; height: 55px; line-height: 55px; font-size: 1.3rem; background: #f8d7da; color: #dc3545;">
+                                {{ user.email.0|upper }}
+                            </div>
+
+                            <!-- Name -->
+                            <h6 class="fw-bold mb-0 small">
+                                {% if user.first_name %}{{ user.first_name }}{% else %}User{% endif %}
+                            </h6>
+
+                            <!-- Email -->
+                            <p class="text-muted mb-0" style="font-size: 0.75rem;">
+                                {{ user.email }}
+                            </p>
+
                         </li>
                         <li><hr class="dropdown-divider"></li>
 

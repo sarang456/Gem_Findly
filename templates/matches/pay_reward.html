@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb small">
+                    <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" class="text-decoration-none text-muted">Dashboard</a></li>
+                    <li class="breadcrumb-item active text-danger fw-bold" aria-current="page">Reward Escrow</li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="bg-dark p-4 text-white text-center">
+                    <div class="bg-warning d-inline-block p-3 rounded-circle mb-3 shadow-sm">
+                        <i class="bi bi-shield-lock-fill fs-2 text-dark"></i>
+                    </div>
+                    <h3 class="fw-bold mt-2">Secure Reward Payment</h3>
+                    <p class="mb-0 opacity-75 small text-uppercase tracking-wider">Escrow Service</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded-4">
+                        {% if match.found_report.item.image %}
+                            <img src="{{ match.found_report.item.image.url }}" class="rounded-3 me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-secondary bg-opacity-25 rounded-3 me-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="bi bi-image text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">{{ match.found_report.item.title }}</h6>
+                            <p class="text-muted extra-small mb-0">Found by: {{ match.found_report.user.first_name }}</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center mb-5">
+                        <h1 class="display-5 fw-bold text-dark mb-0">₹{{ amount }}</h1>
+                        <p class="text-muted small">The finder will receive this after you confirm the handover.</p>
+                    </div>
+
+                    <form action="{% url 'payment_success_reward' %}" method="POST" id="reward-form">
+                        {% csrf_token %}
+                        <script 
+                            src="https://checkout.razorpay.com/v1/checkout.js" 
+                            data-key="{{ razorpay_key }}" 
+                            data-amount="{{ amount_paise }}" 
+                            data-currency="INR"
+                            data-order_id="{{ razorpay_order_id }}"
+                            data-buttontext="Pay Securely with Razorpay" 
+                            data-name="Findly Project" 
+                            data-description="Reward Escrow Payment" 
+                            data-image="https://ui-avatars.com/api/?name=Findly&background=dc3545&color=fff"
+                            data-prefill.name="{{ request.user.get_full_name }}" 
+                            data-prefill.email="{{ request.user.email }}"
+                            data-theme.color="#FF385C"
+                        ></script>
+                        
+                        <input type="hidden" name="match_id" value="{{ match.id }}">
+                    </form>
+
+                    <div class="mt-4 text-center">
+                        <p class="extra-small text-muted mb-0">
+                            <i class="bi bi-lock-fill me-1"></i> SSL Encrypted Transaction
+                        </p>
+                        <a href="{% url 'dashboard' %}" class="btn btn-link text-decoration-none text-muted extra-small mt-2">Cancel and return</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-white rounded-4 shadow-sm border-start border-warning border-4">
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-info-circle-fill text-warning fs-5 me-3 mt-1"></i>
+                    <div>
+                        <p class="mb-0 small text-dark fw-bold">How Escrow Works:</p>
+                        <p class="mb-0 extra-small text-muted">Your money is held safely by Findly. The Finder is only paid once you confirm you have physically received your item.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styling the dynamic Razorpay button to match Findly style */
+    .razorpay-payment-button {
+        background-color: #FF385C !important;
+        color: white !important;
+        border: none !important;
+        padding: 14px 30px !important;
+        border-radius: 50px !important;
+        font-weight: 800 !important;
+        width: 100% !important;
+        font-size: 1rem !important;
+        letter-spacing: 0.5px !important;
+        box-shadow: 0 4px 15px rgba(255, 56, 92, 0.3) !important;
+        transition: all 0.3s ease !important;
+        text-transform: uppercase !important;
+    }
+    .razorpay-payment-button:hover {
+        background-color: #e31c5f !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(255, 56, 92, 0.4) !important;
+    }
+</style>
+{% endblock %}

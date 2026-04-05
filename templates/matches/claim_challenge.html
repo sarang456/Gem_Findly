@@ -2,41 +2,48 @@
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-7">
-            <div class="form-container p-4 p-md-5">
-                <header class="mb-5">
-                    <h2 class="fw-bold mb-2">Ownership Challenge</h2>
-                    <p class="text-muted">The finder requires the following information to verify you are the owner of <strong>{{ item.item.title }}</strong>.</p>
-                </header>
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="bg-primary p-4 text-white text-center">
+                    <i class="bi bi-shield-check fs-1"></i>
+                    <h3 class="fw-bold mt-2">Ownership Challenge</h3>
+                    <p class="mb-0 opacity-75">Prove this item belongs to you</p>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Question 1</label>
+                            <p class="fw-semibold">{{ match.found_report.question_1 }}</p>
+                            <textarea name="answer_1" class="notion-input" rows="3" placeholder="Your answer..." required></textarea>
+                        </div>
 
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    
-                    <div class="form-section mb-4">
-                        <label class="form-label fw-bold">{{ item.question_1 }}</label>
-                        <textarea name="answer_1" class="notion-input w-100" rows="3" required placeholder="Type your answer here..."></textarea>
-                    </div>
+                        {% if match.found_report.question_2 %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Question 2</label>
+                            <p class="fw-semibold">{{ match.found_report.question_2 }}</p>
+                            <textarea name="answer_2" class="notion-input" rows="3" placeholder="Your answer..." required></textarea>
+                        </div>
+                        {% endif %}
 
-                    {% if item.question_2 %}
-                    <div class="form-section mb-4">
-                        <label class="form-label fw-bold">{{ item.question_2 }}</label>
-                        <textarea name="answer_2" class="notion-input w-100" rows="3" required placeholder="Type your answer here..."></textarea>
-                    </div>
-                    {% endif %}
+                        {% if match.found_report.requires_photo_proof %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Photo Proof</label>
+                            <div class="proof-container p-3 text-center border-dashed rounded-3">
+                                <i class="bi bi-camera text-muted fs-2"></i>
+                                <p class="small text-muted mt-2">Upload a bill or a photo of you with the item.</p>
+                                <input type="file" name="proof_image" class="form-control form-control-sm" required>
+                            </div>
+                        </div>
+                        {% endif %}
 
-                    {% if item.requires_photo_proof %}
-                    <div class="form-section mb-5 p-4 bg-light rounded-4 border">
-                        <label class="form-label fw-bold text-danger">Photo Proof Required</label>
-                        <input type="file" name="proof_image" class="form-control mb-2" required>
-                        <small class="text-muted">Upload a receipt or a photo of you with the item.</small>
-                    </div>
-                    {% endif %}
-
-                    <div class="d-flex gap-3">
-                        <a href="{% url 'dashboard' %}" class="btn btn-light rounded-pill px-4">Cancel</a>
-                        <button type="submit" class="btn btn-danger rounded-pill px-5 fw-bold shadow-sm">Submit Claim</button>
-                    </div>
-                </form>
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm transition-hover">
+                            Submit Claim for Review
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
