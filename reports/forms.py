@@ -28,3 +28,15 @@ class SmartReportForm(forms.Form):  # Changed from ModelForm to Form
             'placeholder': 'Offer a reward? (Optional ₹)'
         })
     )
+
+# forms.py
+class FlagReportForm(forms.Form):
+    REASON_CHOICES = [
+        ('spam', 'Spam / Fake Listing'),
+        ('inappropriate', 'Inappropriate Content / Language'),
+        ('wrong_category', 'Wrong Category'),
+        ('harassment', 'Harassment / Privacy Violation'),
+        ('other', 'Other (Explain below)'),
+    ]
+    reason_type = forms.ChoiceField(choices=REASON_CHOICES, widget=forms.Select(attrs={'class': 'notion-input'}))
+    description = forms.CharField(widget=forms.Textarea(attrs={'class': 'notion-input', 'rows': 4, 'placeholder': 'Tell us more...'}))

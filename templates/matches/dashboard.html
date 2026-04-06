@@ -86,26 +86,23 @@
                             </div>
                         </div>
 
-                        <div class="action-zone">
+                       <div class="action-zone">
                             {% if match.status == 'pending' %}
                                 {% if match.lost_report.user == request.user %}
                                     <a href="{% url 'claim_challenge' match.id %}" class="btn btn-primary w-100 rounded-pill fw-bold py-2">
                                         Verify This is Mine
                                     </a>
-                                    <div class="alert alert-warning small rounded-4 border-0">
-                                        <i class="bi bi-cash-coin me-2"></i> Reward: <b>₹{{ match.lost_report.reward_amount }}</b>
-                                    </div>
-                                    <a href="{% url 'pay_reward' match.id %}" class="btn btn-success w-100 rounded-pill fw-bold">
-                                        Pay Reward to Finder
-                                    </a>
+                                    {% if match.lost_report.reward_amount > 0 %}
+                                        <div class="mt-2 text-center">
+                                            <small class="text-muted"><i class="bi bi-info-circle me-1"></i> Reward: ₹{{ match.lost_report.reward_amount }}</small>
+                                        </div>
+                                    {% endif %}
                                 {% else %}
                                     <div class="text-center py-2 bg-light rounded-pill">
                                         <span class="text-muted small italic">Waiting for owner to verify...</span>
                                     </div>
-                                    <div class="alert alert-info small rounded-4 border-0">
-                                        <i class="bi bi-gift me-2"></i> You will receive <b>₹{{ match.lost_report.reward_amount }}</b> once the owner receives the item.
-                                    </div>
                                 {% endif %}
+
                             {% elif match.status == 'claimed' %}
                                 {% if match.found_report.user == request.user %}
                                     <a href="{% url 'review_claim' match.id %}" class="btn btn-warning w-100 rounded-pill fw-bold py-2">
@@ -116,42 +113,83 @@
                                         <span class="text-info small fw-bold">Verification in progress...</span>
                                     </div>
                                 {% endif %}
-                            {% elif match.status == 'confirmed' %}
-                                <div class="bg-success bg-opacity-10 border border-success rounded-4 p-4">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
-                                            <i class="bi bi-check-lg small"></i>
-                                        </div>
-                                        <span class="text-success fw-bold small text-uppercase tracking-wider">Connection Verified</span>
-                                    </div>
 
-                                    {% if match.found_report.user == request.user %}
-                                        <div class="mb-3">
-                                            <p class="mb-1 small text-muted text-uppercase fw-bold">Owner Contact</p>
-                                            <h6 class="fw-bold"><i class="bi bi-envelope-at me-2"></i>{{ match.lost_report.user.email }}</h6>
-                                        </div>
-                                        
-                                        <div class="p-3 bg-white rounded-3 border mb-0">
-                                            <p class="small text-muted mb-0 italic">
-                                                <i class="bi bi-info-circle me-1"></i> Waiting for the owner to confirm they have received the item. Once they confirm, your reward (if any) will be released.
-                                            </p>
-                                        </div>
+                            {% elif match.status == 'confirmed' or match.status == 'paid' %}
+                                <div class="bg-success bg-opacity-10 border border-success rounded-4 p-4">
+                                    
+                                    {% if match.lost_report.user == request.user %}
+                                        {% if match.lost_report.reward_amount > 0 %}
+                                            {% if match.status == 'paid' or match.transaction_set.last.status == 'Success' %}
+                                                <div class="alert alert-success border-0 small mb-3">
+                                                    <i class="bi bi-shield-check me-2"></i> Reward Paid! Findly is holding the funds.
+                                                </div>
+                                                <div class="contact-box bg-white p-3 rounded-4 border mb-3">
+                                                    <p class="extra-small text-muted mb-1 fw-bold">CONTACT FINDER</p>
+                                                    <h6 class="fw-bold mb-0 text-primary">{{ match.found_report.user.email }}</h6>
+                                                </div>
+                                                <form action="{% url 'close_case' match.id %}" method="POST">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">
+                                                        I Received My Item
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <div class="text-center py-2">
+                                                    <div class="bg-warning-subtle text-warning d-inline-block p-3 rounded-circle mb-3">
+                                                        <i class="bi bi-lock-fill fs-3"></i>
+                                                    </div>
+                                                    <h6 class="fw-bold text-dark">Reward Payment Required</h6>
+                                                    <p class="extra-small text-muted mb-3">
+                                                        You promised a reward of ₹{{ match.lost_report.reward_amount }}. Pay now to unlock the finder's contact info.
+                                                    </p>
+                                                    <a href="{% url 'pay_reward' match.id %}" class="btn btn-warning w-100 rounded-pill fw-bold shadow-sm">
+                                                        Pay Reward to Unlock Contact
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        {% else %}
+                                            <div class="contact-box bg-white p-3 rounded-4 border mb-3 text-center">
+                                                <p class="extra-small text-muted mb-1 fw-bold">CONTACT FINDER</p>
+                                                <h6 class="fw-bold mb-0 text-primary">{{ match.found_report.user.email }}</h6>
+                                            </div>
+                                            <form action="{% url 'close_case' match.id %}" method="POST">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold shadow-sm">
+                                                    I Received My Item
+                                                </button>
+                                            </form>
+                                        {% endif %}
 
                                     {% else %}
-                                        <div class="mb-3">
-                                            <p class="mb-1 small text-muted text-uppercase fw-bold">Finder Contact</p>
-                                            <h6 class="fw-bold"><i class="bi bi-envelope-at me-2"></i>{{ match.found_report.user.email }}</h6>
+                                        <div class="text-center py-3">
+                                            <div class="bg-success text-white d-inline-block p-3 rounded-circle mb-3 shadow-sm">
+                                                <i class="bi bi-patch-check-fill fs-3"></i>
+                                            </div>
+                                            <h6 class="fw-bold text-dark">Identity Confirmed!</h6>
+                                            
+                                            {% if match.lost_report.reward_amount > 0 %}
+                                                {% if match.status == 'paid' or match.transaction_set.last.status == 'Success' %}
+                                                    <div class="alert alert-info border-0 small mb-3">
+                                                        <i class="bi bi-cash-coin me-2"></i> Reward Secured! Owner is coming to collect the item.
+                                                    </div>
+                                                    <div class="contact-box bg-white p-3 rounded-4 border">
+                                                        <p class="extra-small text-muted mb-1 fw-bold">OWNER CONTACT</p>
+                                                        <h6 class="fw-bold mb-0 text-success">{{ match.lost_report.user.email }}</h6>
+                                                    </div>
+                                                {% else %}
+                                                    <p class="extra-small text-muted mb-0">
+                                                        Waiting for the owner to secure your <b>₹{{ match.lost_report.reward_amount }}</b> reward in escrow. 
+                                                        You will see their contact info once they pay.
+                                                    </p>
+                                                {% endif %}
+                                            {% else %}
+                                                <p class="extra-small text-muted mb-3">The owner will contact you shortly to collect the item.</p>
+                                                <div class="contact-box bg-white p-3 rounded-4 border">
+                                                    <p class="extra-small text-muted mb-1 fw-bold">OWNER CONTACT</p>
+                                                    <h6 class="fw-bold mb-0 text-success">{{ match.lost_report.user.email }}</h6>
+                                                </div>
+                                            {% endif %}
                                         </div>
-
-                                        <p class="extra-small text-muted mb-3 italic">Coordinate with the finder to collect your item. Only click below once you have the item.</p>
-                                        
-                                        <form action="{% url 'close_case' match.id %}" method="POST" class="m-0">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold py-2 shadow-sm transition-hover" 
-                                                    onclick="return confirm('IMPORTANT: Only confirm if you physically have the item. This will release the reward and close the case.')">
-                                                <i class="bi bi-hand-thumbs-up-fill me-2"></i>I Received My Item
-                                            </button>
-                                        </form>
                                     {% endif %}
                                 </div>
                             {% endif %}

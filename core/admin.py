@@ -24,13 +24,13 @@ class ReportAdmin(admin.ModelAdmin):
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
 
-    list_display = ('id', 'display_lost', 'display_found', 'score_display','is_confirmed', 'created_at')
-    list_filter = ('is_confirmed', 'created_at',)
+    list_display = ('id', 'display_lost', 'display_found', 'score_display', 'status', 'is_confirmed', 'created_at')
+    list_filter = ('status', 'is_confirmed', 'created_at',)
     readonly_fields = ('score', 'lost_report', 'found_report', 'created_at')
 
     fieldsets = (
         ('Match Info', {
-            'fields': ('score',)
+            'fields': ('score', 'status',)
         }),
         ('Reports Involved', {
             'fields': ('lost_report', 'found_report')

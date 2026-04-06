@@ -6,6 +6,7 @@ from django.contrib import messages
 import razorpay
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 
 # Create your views here.
 @login_required
@@ -127,24 +128,35 @@ def review_claim(request, match_id):
 
 @login_required
 def start_claim_process(request, report_id):
-    # 1. Get the Found Item
+    # 1. Get the Found Item the user is looking at
     found_report = get_object_or_404(Report, id=report_id)
 
-    # 2. Find the user's corresponding LOST report
-    user_lost_report = Report.objects.filter(user=request.user, report_type='lost', is_resolved=False).first()
+    # 2. Try to find a LOST report with the SAME CATEGORY
+    # This is much smarter than just taking the '.first()' one.
+    user_lost_report = Report.objects.filter(
+        user=request.user, 
+        report_type='lost', 
+        item__category=found_report.item.category, # Match by category!
+        is_resolved=False
+    ).first()
 
-    # 3. TRAFFIC CONTROL: If no report exists, send them to the form
+    # 3. SMART REDIRECT: If no matching report exists, pre-fill the form
     if not user_lost_report:
-        messages.info(request, "To claim this item, you first need to register your lost item details.")
-        return redirect('create_report')
+        messages.info(request, "Please confirm your lost item details to start the claim.")
+        # We pass the found item's data so they don't have to type it!
+        return redirect(
+            f"{reverse('create_report')}?prefill_title={found_report.item.title}"
+            f"&prefill_cat={found_report.item.category}"
+            f"&prefill_loc={found_report.location_name}"
+        )
     
-    # 4. THE FIX: Create the match with a DEFAULT SCORE
+    # 4. Create the match
     match, created = Match.objects.get_or_create(
         found_report=found_report,
-        lost_report=user_lost_report, # Use the object directly
+        lost_report=user_lost_report,
         defaults={
             'status': 'pending',
-            'score': 100.0  # <--- THIS WAS MISSING. Database needs this!
+            'score': 100.0  
         }
     )
     
@@ -320,46 +332,46 @@ def pay_reward(request, match_id):
         messages.error(request, f"Payment Gateway Error: {e}")
         return redirect('dashboard')
 
-@login_required
-@csrf_exempt
+@csrf_exempt # REMOVE @login_required here
 def payment_success_reward(request):
-    # This matches the 'data-handler' or the 'callback_url' from Razorpay
     if request.method == "POST":
         payment_id = request.POST.get('razorpay_payment_id')
         order_id = request.POST.get('razorpay_order_id')
         signature = request.POST.get('razorpay_signature')
 
-        # 1. Find our pending transaction
+        # 1. Get the transaction - if this fails, the view stops
         transaction = get_object_or_404(Transaction, razorpay_order_id=order_id)
         
-        # 2. Verify Signature (Security Step)
-        params_dict = {
-            'razorpay_order_id': order_id,
-            'razorpay_payment_id': payment_id,
-            'razorpay_signature': signature
-        }
-
         try:
+            # 2. Verify the signature
+            params_dict = {
+                'razorpay_order_id': order_id,
+                'razorpay_payment_id': payment_id,
+                'razorpay_signature': signature
+            }
             client.utility.verify_payment_signature(params_dict)
             
-            # 3. Success! Update Transaction & Match Status
+            # 3. Update Transaction
             transaction.status = 'Success'
             transaction.razorpay_payment_id = payment_id
             transaction.save()
 
-            # IMPORTANT: Update the match status so the Finder knows money is held
+            # 4. Update Match - THE CRITICAL PART
             match = transaction.match
-            match.status = 'confirmed' # Or create a new status 'paid'
-            match.save()
-
-            messages.success(request, "Payment received! Findly is holding the reward in escrow.")
+            if match:
+                match.status = 'paid' # Ensure this matches your models.py choices exactly
+                match.save()
+                print(f"SUCCESS: Match {match.id} is now PAID.") # Check your terminal for this!
+            
             return redirect('dashboard')
 
-        except Exception:
+        except Exception as e:
+            print(f"PAYMENT VERIFICATION ERROR: {e}")
             transaction.status = 'Failed'
             transaction.save()
-            messages.error(request, "Payment verification failed.")
             return redirect('dashboard')
+
+    return redirect('dashboard')
         
 # matches/views.py
 

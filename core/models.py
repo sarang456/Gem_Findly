@@ -113,10 +113,11 @@ class Match(models.Model):
     score = models.FloatField()
     
     STATUS_CHOICES = [
-        ('pending', 'Pending'),      # AI just created this
-        ('claimed', 'Claimed'),      # Owner said "This is mine"
-        ('confirmed', 'Confirmed'),  # Finder said "I believe you"
-        ('returned', 'Returned'),    # Item is physically back with owner
+        ('pending', 'Pending Verification'),
+        ('confirmed', 'Identity Verified'), # Owner confirmed the finder's answers
+        ('paid', 'Reward Secured in Escrow'), # NEW: Payment successful
+        ('returned', 'Item Handover Complete'), # Case closed
+        ('rejected', 'Match Rejected'),
     ]
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

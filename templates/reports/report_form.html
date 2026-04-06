@@ -2,73 +2,142 @@
 {% load static %}
 
 {% block content %}
+<style>
+    /* Premium Selection Cards for Report Type */
+    .report-type-selector {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .type-card {
+        flex: 1;
+        cursor: pointer;
+        border: 2px solid #f0f0f0;
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: white;
+    }
+    .type-card:hover { border-color: #dee2e6; transform: translateY(-2px); }
+    .type-card.active-lost { border-color: #dc3545; background: #fff5f5; box-shadow: 0 4px 12px rgba(220, 53, 69, 0.1); }
+    .type-card.active-found { border-color: #198754; background: #f4faf7; box-shadow: 0 4px 12px rgba(25, 135, 84, 0.1); }
+    
+    .type-card i { font-size: 1.5rem; display: block; margin-bottom: 5px; }
+    
+    /* Modern Switch for Photo Proof */
+    .form-switch .form-check-input {
+        width: 3em;
+        height: 1.5em;
+        cursor: pointer;
+    }
+    .form-switch .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        margin-right: 12px;
+    }
+</style>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-7">
-            <div class="form-container bg-white shadow-sm p-4 p-md-5" style="border-radius: 25px;">
+        <div class="col-lg-8">
+            <div class="form-container bg-white shadow-lg p-4 p-md-5" style="border-radius: 30px; border: 1px solid rgba(0,0,0,0.05);">
+                
                 <header class="text-center mb-5">
-                    <h1 class="fw-bold h2 mb-2">Create a New Report</h1>
-                    <p class="text-muted">Our AI matching engine will scan for details as soon as you submit.</p>
+
+                    <h1 class="fw-bold display-6 mb-2">
+                        {% if edit_mode %}Update Report{% else %}New Report{% endif %}
+                    </h1>
+                    <p class="text-muted">Fill in the details below to trigger the AI discovery process.</p>
                 </header>
 
                 <form method="POST" enctype="multipart/form-data" id="reportForm">
                     {% csrf_token %}
 
                     <div class="form-section mb-5">
-                        <h5 class="section-title fw-bold mb-3">General Information</h5>
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="section-icon bg-dark text-white"><i class="bi bi-info-circle"></i></div>
+                            <h5 class="fw-bold m-0">What happened?</h5>
+                        </div>
+
+                        <div class="report-type-selector">
+                            <div class="type-card" id="card-lost" onclick="selectType('lost')">
+                                <i class="bi bi-search text-danger"></i>
+                                <span class="fw-bold small text-uppercase">I Lost Something</span>
+                            </div>
+                            <div class="type-card" id="card-found" onclick="selectType('found')">
+                                <i class="bi bi-hand-index-thumb text-success"></i>
+                                <span class="fw-bold small text-uppercase">I Found Something</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display: none;">{{ form.report_type }}</div>
+
                         <div class="row g-4">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Report Type</label>
-                                {{ form.report_type }}
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Category</label>
-                                {{ form.category }} 
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-bold">Item Title</label>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold text-muted">Item Title</label>
                                 {{ form.title }}
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Category</label>
+                                {{ form.category }} 
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted">Location Landmark</label>
+                                {{ form.location_name }}
+                            </div>
                             <div class="col-12">
-                                <label class="form-label small fw-bold">Detailed Description</label>
+                                <label class="form-label small fw-bold text-muted">Detailed Description</label>
                                 {{ form.description }}
                             </div>
                         </div>
                     </div>
 
-                    <div class="form-section mb-5">
-                        <h5 class="section-title fw-bold mb-3">Item Appearance</h5>
-                        <div class="image-upload-wrapper p-4 text-center border rounded-3 bg-light">
-                            <label class="form-label d-block mb-3 fw-bold">Upload High Quality Image</label>
-                            {{ form.image }}
-                            <small class="text-muted d-block mt-2">AI uses the image to find matches based on color and shape.</small>
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-12">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2"></i>Pin Point Location</h5>
+                            <div id="map" class="shadow-sm border" style="height: 300px; border-radius: 20px;"></div>
+                            <div class="row mt-3 g-2 d-none"> <div class="col-6">{{ form.latitude }}</div>
+                                <div class="col-6">{{ form.longitude }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <h5 class="fw-bold mb-3"><i class="bi bi-camera me-2"></i>Item Photo</h5>
+                            <div class="image-upload-wrapper p-4 text-center border border-dashed rounded-4 bg-light" style="border: 2px dashed #dee2e6 !important;">
+                                <i class="bi bi-cloud-arrow-up display-6 text-muted mb-2"></i>
+                                {{ form.image }}
+                                <p class="small text-muted mt-2 mb-0">Drag and drop or click to upload</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="form-section mb-5">
-                        <h5 class="section-title fw-bold mb-3">Where was it seen?</h5>
-                        <div id="map" class="mb-4 shadow-sm" style="height: 350px; border-radius: 15px;"></div>
-                        <div class="col-12 mb-3">
-                            <label class="form-label small fw-bold">Location Name (Landmark)</label>
-                            {{ form.location_name }}
-                        </div>
-                        <div class="row g-3">
-                            <div class="col-md-6">{{ form.latitude }}</div>
-                            <div class="col-md-6">{{ form.longitude }}</div>
-                        </div>
-                    </div>
+                    <div id="finderSecuritySection" class="form-section mb-5 p-4 rounded-4" style="display: none; background: #f8f9fa; border: 1px solid #dee2e6;">
+                        <h5 class="fw-bold text-primary mb-3"><i class="bi bi-shield-check me-2"></i>Security Questions</h5>
+                        <div class="mb-3">{{ form.question_1 }}</div>
+                        <div class="mb-3">{{ form.question_2 }}</div>
+                        
+                        <hr class="my-4">
 
-                    <div id="finderSecuritySection" class="form-section mb-5 p-4 rounded-4 bg-white shadow-sm border border-primary-subtle" style="display: none;">
-                        <h5 class="section-title text-primary fw-bold">Owner Verification</h5>
-                        <p class="small text-muted mb-4">Ask questions that only the true owner can answer.</p>
-                        <div class="mb-4">{{ form.question_1 }}</div>
-                        <div class="mb-4">{{ form.question_2 }}</div>
-                        <div class="form-check form-switch d-flex align-items-center gap-3">
-                            <label class="form-check-label fw-bold small">Mandatory Photo Proof</label>
-                            {{ form.requires_photo_proof }}
+                        <div class="d-flex align-items-center justify-content-between p-3 bg-white rounded-3 shadow-sm">
+                            <div>
+                                <h6 class="fw-bold mb-0">Mandatory Photo Proof</h6>
+                                <small class="text-muted">Requires owner to upload a photo of the item before meeting.</small>
+                            </div>
+                            <div class="form-check form-switch">
+                                {{ form.requires_photo_proof }}
+                            </div>
                         </div>
                     </div>
 
@@ -99,11 +168,9 @@
                         </div>
                     </div>
 
-                    <div class="pt-4 border-top">
-                        <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow">
-                            Launch Search & Save Report
-                        </button>
-                    </div>
+                    <button type="submit" class="btn btn-dark w-100 rounded-pill py-3 fw-bold shadow-lg transition-hover">
+                        {% if edit_mode %}Update Details{% else %}Post to Findly{% endif %}
+                    </button>
                 </form>
             </div>
         </div>
@@ -114,31 +181,22 @@
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 <script>
-    // Map & Geocoder Logic
+    // Map Logic (Same as your original)
     var map = L.map('map').setView([20.5937, 78.9629], 5);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     var marker;
 
-    var geocoder = L.Control.geocoder({
-        defaultMarkGeocode: false,
-        placeholder: "Search location...",
-        suggest: true, 
-        minLength: 3
-    })
+    var geocoder = L.Control.geocoder({ defaultMarkGeocode: false, placeholder: "Search location...", suggest: true, minLength: 3 })
     .on('markgeocode', function(e) {
         var latlng = e.geocode.center;
         map.flyTo(latlng, 18, { animate: true, duration: 1.5 });
-
         if (marker) { marker.setLatLng(latlng); }
         else { marker = L.marker(latlng).addTo(map); }
-
         document.getElementById('id_latitude').value = latlng.lat.toFixed(6);
         document.getElementById('id_longitude').value = latlng.lng.toFixed(6);
-        
         var locationInput = document.querySelector('input[name="location_name"]');
         if (locationInput) { locationInput.value = e.geocode.name; }
-    })
-    .addTo(map);
+    }).addTo(map);
 
     map.on('click', function (e) {
         if (marker) { marker.setLatLng(e.latlng); }
@@ -147,42 +205,42 @@
         document.getElementById('id_longitude').value = e.latlng.lng.toFixed(6);
     });
 
-    // Toggle logic for Found Items
-    // Toggle logic for Dynamic Sections
-    const reportTypeSelect = document.querySelector('select[name="report_type"]');
+    // CUSTOM SELECTOR LOGIC (Connects visual cards to real hidden input)
+    const realSelect = document.querySelector('select[name="report_type"]');
+    
+    function selectType(type) {
+        realSelect.value = type;
+        
+        document.getElementById('card-lost').classList.remove('active-lost');
+        document.getElementById('card-found').classList.remove('active-found');
+        
+        if(type === 'lost') document.getElementById('card-lost').classList.add('active-lost');
+        if(type === 'found') document.getElementById('card-found').classList.add('active-found');
+        
+        toggleDynamicSections();
+    }
+
+    // Toggle Logic
     const securitySection = document.getElementById('finderSecuritySection');
     const rewardSection = document.getElementById('lostRewardSection');
 
     function toggleDynamicSections() {
-        const val = reportTypeSelect ? reportTypeSelect.value : '';
-        
+        const val = realSelect.value;
         if (val === 'found') {
-            // Finder logic: show questions, hide reward
             securitySection.style.display = 'block';
             rewardSection.style.display = 'none';
-            
-            // Reset reward to 0 if they switched from Lost to Found
-            const rewardInput = document.querySelector('input[name="reward_amount"]');
-            if(rewardInput) rewardInput.value = 0;
-
         } else if (val === 'lost') {
-            // Loser logic: hide questions, show reward
             securitySection.style.display = 'none';
             rewardSection.style.display = 'block';
         } else {
-            // Default: hide everything
             securitySection.style.display = 'none';
             rewardSection.style.display = 'none';
         }
     }
 
-    if (reportTypeSelect) {
-        reportTypeSelect.addEventListener('change', toggleDynamicSections);
-    }
-
-    // Initial call on load
     window.onload = () => {
-        toggleDynamicSections();
+        // Sync visual state if editing
+        if(realSelect.value) selectType(realSelect.value);
         setTimeout(() => { map.invalidateSize(); }, 500);
     };
 </script>

@@ -1,99 +1,152 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-5 pt-5">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'listings' %}" class="text-decoration-none">Listings</a></li>
-            <li class="breadcrumb-item active">{{ report.item.title }}</li>
-        </ol>
-    </nav>
+<style>
+    .fade-up { animation: fadeUp 0.6s ease-out; }
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .sticky-md-top { top: 100px !important; z-index: 10; }
+    .reward-glow {
+        box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
+        border: 2px solid #ffc107;
+    }
+</style>
+
+<div class="container mt-5 pt-4 fade-up">
+    
 
     <div class="row g-5">
-        <div class="col-md-7">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-lg rounded-5 overflow-hidden bg-white">
                 {% if report.item.image %}
-                <img src="{{ report.item.image.url }}" class="img-fluid w-100"
-                    style="max-height: 500px; object-fit: contain; background: #f8f9fa;">
+                    <div class="image-hover-zoom">
+                        <img src="{{ report.item.image.url }}" class="img-fluid w-100" 
+                             style="min-height: 500px; max-height: 600px; object-fit: cover;">
+                    </div>
                 {% else %}
-                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
-                    <i class="bi bi-image text-muted display-1"></i>
-                </div>
+                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 500px;">
+                        <i class="bi bi-image text-muted display-1 opacity-25"></i>
+                    </div>
                 {% endif %}
+            </div>
+            
+            <div class="mt-4 p-4 bg-white rounded-5 shadow-sm border">
+                <h5 class="fw-bold mb-3"><i class="bi bi-map me-2"></i>Location Details</h5>
+                <div class="d-flex align-items-center p-3 bg-light rounded-4">
+                    <div class="bg-danger text-white rounded-circle p-3 me-3">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">{{ report.location_name }}</h6>
+                        <p class="text-muted small mb-0">Reported near campus coordinates</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="col-md-5">
-            <div class="ps-md-4">
-                <span
-                    class="badge {% if report.report_type == 'found' %}bg-success{% else %}bg-danger{% endif %} rounded-pill px-3 mb-2">
-                    {{ report.report_type|upper }}
-                </span>
-                <h1 class="fw-bold h2 mb-3">{{ report.item.title }}</h1>
-
-                <div class="d-flex align-items-center mb-4 text-muted">
-                    <i class="bi bi-geo-alt-fill me-2 text-danger"></i>
-                    <span>{{ report.location_name }}</span>
-                    <span class="mx-2">•</span>
-                    <i class="bi bi-calendar-event me-2"></i>
-                    <span>{{ report.created_at|date:"M d, Y" }}</span>
+        <div class="col-lg-5">
+            <div class="ps-lg-4 sticky-md-top">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <span class="badge {% if report.report_type == 'found' %}bg-success{% else %}bg-danger{% endif %} rounded-pill px-4 py-2 shadow-sm uppercase tracking-wider">
+                        {{ report.report_type|upper }}
+                    </span>
+                    
+                    {% if report.reward_amount > 0 %}
+                    <div class="badge bg-warning text-dark rounded-pill px-3 py-2 reward-glow">
+                        <i class="bi bi-gift-fill me-1"></i> ₹{{ report.reward_amount }} REWARD
+                    </div>
+                    {% endif %}
                 </div>
 
-                <div class="mb-4">
-                    <h5 class="fw-bold">Description</h5>
-                    <p class="text-secondary leading-relaxed">
-                        {{ report.item.description|default:"No description provided for this item." }}
+                <h1 class="display-5 fw-bold text-dark mb-2">{{ report.item.title }}</h1>
+                
+                <div class="d-flex align-items-center mb-4 text-muted small fw-medium">
+                    <i class="bi bi-clock me-1"></i> Posted {{ report.created_at|timesince }} ago
+                    <span class="mx-2 text-silver">|</span>
+                    <i class="bi bi-tag me-1"></i> {{ report.item.category }}
+                </div>
+
+                <div class="mb-5">
+                    <h5 class="fw-bold text-uppercase small text-muted tracking-widest mb-3">Description</h5>
+                    <p class="text-secondary fs-5" style="line-height: 1.8;">
+                        {{ report.item.description|default:"No detailed description provided." }}
                     </p>
                 </div>
 
-                <div class="card bg-light border-0 rounded-4 p-4 mb-4">
-                    <h6 class="fw-bold mb-3"><i class="bi bi-shield-lock-fill me-2"></i>Status & Contact</h6>
+                <div class="card border-0 shadow-sm rounded-5 p-4 mb-4" style="background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.05) !important;">
+                    <h6 class="fw-bold mb-4 d-flex align-items-center">
+                        <span class="bg-dark text-white rounded-circle p-2 me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="bi bi-person-fill small"></i>
+                        </span>
+                        Contact Information
+                    </h6>
 
                     {% if report.is_resolved %}
-                        <div class="text-center py-2">
-                            <div class="display-6 text-success mb-2"><i class="bi bi-check-circle-fill"></i></div>
-                            <h5 class="fw-bold text-success">This Item is Resolved</h5>
-                            <p class="text-muted small mb-0">Successfully returned to its owner.</p>
+                        <div class="text-center py-3">
+                            <div class="display-5 text-success mb-2"><i class="bi bi-check-circle-fill"></i></div>
+                            <h5 class="fw-bold text-success">Case Resolved</h5>
+                            <p class="text-muted small">This item was successfully returned.</p>
                         </div>
                     {% elif user.is_staff or is_owner or has_confirmed_match %}
-                        <p class="mb-1"><strong>Name:</strong> {{ report.user.get_full_name|default:"Member" }}</p>
-                        <p class="mb-1"><strong>Email:</strong> {{ report.user.email }}</p>
-                        
-                        {% if has_confirmed_match %}
-                            <div class="badge bg-success mt-2"><i class="bi bi-check-circle me-1"></i> Match Confirmed</div>
-                        {% endif %}
+                        <div class="user-details bg-white p-3 rounded-4 border">
+                            <div class="mb-2">
+                                <label class="text-muted extra-small fw-bold text-uppercase">Reporter Name</label>
+                                <p class="mb-0 fw-bold">{{ report.user.get_full_name|default:"Findly Member" }}</p>
+                            </div>
+                            <div>
+                                <label class="text-muted extra-small fw-bold text-uppercase">Direct Email</label>
+                                <p class="mb-0 fw-bold text-primary">{{ report.user.email }}</p>
+                            </div>
+                        </div>
                     {% else %}
-                        <div class="alert alert-warning border-0 small mb-0 shadow-sm">
-                            <i class="bi bi-info-circle me-2"></i>
-                            User details are hidden for privacy. Please click the button below to start a claim.
+                        <div class="p-3 bg-danger bg-opacity-10 rounded-4 border border-danger border-opacity-10">
+                            <p class="text-danger small mb-0 fw-medium">
+                                <i class="bi bi-lock-fill me-2"></i>Contact details are locked until a match is confirmed.
+                            </p>
                         </div>
                     {% endif %}
                 </div>
 
-                <div class="d-grid gap-2">
+                <div class="d-grid gap-3">
                     {% if report.is_resolved %}
-                        <button class="btn btn-secondary btn-lg rounded-pill fw-bold py-3 shadow-none w-100" disabled>
-                            Case Closed
+                        <button class="btn btn-secondary btn-lg rounded-pill fw-bold py-3 shadow-none" disabled>
+                            Item Already Recovered
                         </button>
                     {% elif not is_owner %}
-                        {% if report.report_type == 'found' %}
-                            <a href="{% url 'start_claim' report.id %}" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow w-100">
-                                This is Mine!
+                       {% if report.report_type == 'found' %}
+                            <a href="{% url 'start_claim' report.id %}" 
+                            class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow-lg transition-hover" 
+                            style="background: linear-gradient(135deg, #FF385C, #E31C5F); border: none;">
+                                <i class="bi bi-hand-index-thumb me-2"></i>Yes, This is Mine!
                             </a>
                         {% else %}
-                            <a href="{% url 'create_report' %}" class="btn btn-danger btn-lg rounded-pill fw-bold py-3 shadow w-100">
-                                I Found This!
+                            <a href="{% url 'create_report' %}?prefill_title={{ report.item.title|urlencode }}&prefill_cat={{ report.item.category|urlencode }}&prefill_loc={{ report.location_name|urlencode }}" 
+                            class="btn btn-primary btn-lg rounded-pill fw-bold py-3 shadow-lg transition-hover" 
+                            style="background: linear-gradient(135deg, #1877F2, #0053a0); border: none;">
+                                <i class="bi bi-plus-circle me-2"></i>I Found This Item
                             </a>
                         {% endif %}
                     {% else %}
-                        <button class="btn btn-outline-dark btn-lg rounded-pill fw-bold py-3" disabled>
-                            You reported this item
-                        </button>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'edit_report' report.id %}" class="btn btn-outline-dark btn-lg rounded-pill fw-bold py-3 flex-grow-1">
+                                <i class="bi bi-pencil me-2"></i>Edit Post
+                            </a>
+                        </div>
                     {% endif %}
 
-                    <button class="btn btn-link text-muted btn-sm text-decoration-none mt-2">
-                        <i class="bi bi-flag me-1"></i> Report inappropriate content
-                    </button>
+                   <div class="text-center mt-3">
+                        {% if not is_owner %}
+                            <a href="{% url 'report_item_page' report.id %}" 
+                            class="btn btn-link text-muted btn-sm text-decoration-none opacity-50 transition-hover">
+                                <i class="bi bi-flag-fill me-1 text-danger"></i> Report this listing
+                            </a>
+                        {% else %}
+                            <small class="text-muted extra-small italic">This is your listing</small>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

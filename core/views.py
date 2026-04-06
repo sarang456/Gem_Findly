@@ -218,3 +218,5 @@ def site_analytics(request):
     }
     
     return render(request, 'core/analytics.html', context)
+
+

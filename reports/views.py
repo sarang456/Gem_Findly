@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .forms import SmartReportForm
+from .forms import SmartReportForm, FlagReportForm
 from django.db import transaction
 from core.utils import analyze_image, find_potential_matches, run_matching_engine
 from core.models import Report, Item, Category, Match
@@ -50,7 +50,22 @@ def create_report(request):
             except Exception as e:
                 messages.error(request, f"An error occurred: {str(e)}")
     else:
-        form = SmartReportForm()
+        # 1. Catch the data from the URL (?prefill_title=...)
+        prefill_title = request.GET.get('prefill_title', '')
+        prefill_cat = request.GET.get('prefill_cat', '')
+        prefill_loc = request.GET.get('prefill_loc', '')
+
+        # 2. Set the 'initial' dictionary
+        initial_data = {}
+        if prefill_title:
+            initial_data['title'] = f"Regarding: {prefill_title}"
+        if prefill_cat:
+            initial_data['category'] = prefill_cat
+        if prefill_loc:
+            initial_data['location_name'] = prefill_loc
+
+        # 3. Pass the initial data to the form
+        form = SmartReportForm(initial=initial_data)
     
     return render(request, 'reports/report_form.html', {'form': form})
 
@@ -131,3 +146,95 @@ def close_case_manual(request, report_id):
         report.save()
         messages.success(request, "Congratulations! Your report has been marked as resolved.")
     return redirect('dashboard')
+
+@login_required
+def edit_report(request, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    
+    # BRUTAL SECURITY: Stop people from editing other people's posts
+    if report.user != request.user:
+        messages.error(request, "You do not have permission to edit this report.")
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        # Fill the form with POST data AND the existing image
+        form = SmartReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Update the Item details
+            item = report.item
+            item.title = form.cleaned_data['title']
+            item.description = form.cleaned_data['description']
+            item.category = form.cleaned_data['category']
+            if form.cleaned_data['image']:
+                item.image = form.cleaned_data['image']
+            item.save()
+
+            # Update the Report details
+            report.location_name = form.cleaned_data['location_name']
+            report.latitude = form.cleaned_data['latitude']
+            report.longitude = form.cleaned_at['longitude']
+            report.reward_amount = form.cleaned_data.get('reward_amount', 0)
+            report.save()
+
+            messages.success(request, "Report updated successfully!")
+            return redirect('item_details', report_id=report.id)
+    else:
+        # PRE-FILL the form with existing data
+        initial_data = {
+            'title': report.item.title,
+            'description': report.item.description,
+            'category': report.item.category,
+            'report_type': report.report_type,
+            'location_name': report.location_name,
+            'latitude': report.latitude,
+            'longitude': report.longitude,
+            'reward_amount': report.reward_amount,
+        }
+        form = SmartReportForm(initial=initial_data)
+
+    return render(request, 'reports/report_form.html', {'form': form, 'edit_mode': True})
+
+@login_required
+def flag_report(request, report_id):
+    if request.method == "POST":
+        report = get_object_or_404(Report, id=report_id)
+        
+        # 1. Flip the switch
+        report.is_flagged = True
+        
+        # 2. Add a reason (You can make this a form later, for now we hardcode it)
+        report.flag_reason = f"Reported by user: {request.user.email}"
+        report.save()
+        
+        messages.warning(request, "This listing has been reported to administrators for review.")
+        return redirect('item_details', report_id=report.id)
+    
+    return redirect('dashboard')
+
+@login_required
+def report_item_page(request, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    
+    if request.method == "POST":
+        form = FlagReportForm(request.POST)
+        if form.is_valid():
+            # 1. Mark the item as flagged
+            report.is_flagged = True
+            
+            # 2. Combine the choice and description for the Admin to see
+            chosen_reason = form.cleaned_data['reason_type']
+            extra_details = form.cleaned_data['description']
+            report.flag_reason = f"[{chosen_reason.upper()}] {extra_details}"
+            
+            report.save()
+            
+            messages.success(request, "Thank you. Our moderators will review this listing shortly.")
+            return redirect('item_details', report_id=report.id)
+    else:
+        form = FlagReportForm()
+
+    return render(request, 'reports/report_reason_page.html', {
+        'form': form,
+        'report': report
+    })
+

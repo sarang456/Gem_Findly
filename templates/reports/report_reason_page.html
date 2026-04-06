@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="bg-danger p-4 text-white text-center">
+                    <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+                    <h3 class="fw-bold mt-2">Report Listing</h3>
+                    <p class="mb-0 opacity-75">Help us keep Findly safe for the campus.</p>
+                </div>
+                <div class="card-body p-4 p-md-5">
+                    <div class="mb-4 p-3 bg-light rounded-3">
+                        <small class="text-muted text-uppercase fw-bold">Reporting Item:</small>
+                        <h6 class="fw-bold mb-0">{{ report.item.title }}</h6>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Why are you flagging this?</label>
+                            {{ form.reason_type }}
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Additional Details</label>
+                            {{ form.description }}
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100 rounded-pill py-3 fw-bold shadow">
+                            Submit Report
+                        </button>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'item_details' report.id %}" class="text-muted small">Cancel and go back</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

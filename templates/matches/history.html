@@ -10,36 +10,57 @@
                 {% if is_admin %}Review all successful returns across the platform.{% else %}Review your past reports and successful returns.{% endif %}
             </p>
         </div>
-        <a href="{% if is_admin %}{% url 'admin_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-outline-secondary rounded-pill btn-sm">
-            Back to Dashboard
+        <a href="{% if is_admin %}{% url 'admin_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-outline-secondary rounded-pill btn-sm px-4">
+            <i class="bi bi-arrow-left me-1"></i> Back
         </a>
     </div>
 
-    <h5 class="fw-bold mb-4 mt-5"><i class="bi bi-check2-circle text-primary me-2"></i>Resolved Items</h5>
+    <h5 class="fw-bold mb-4 mt-5"><i class="bi bi-check2-circle text-success me-2"></i>Resolved Items Archive</h5>
+    
     <div class="row g-4 mb-5">
         {% for report in history_reports %}
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="fw-bold mb-1">{{ report.item.title }}</h6>
-                        <small class="text-muted d-block">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100 transition-hover">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="icon-box bg-success bg-opacity-10 text-success rounded-3 p-2">
+                            <i class="bi bi-archive-fill"></i>
+                        </div>
+                        <span class="badge bg-success-subtle text-success rounded-pill px-3">Resolved</span>
+                    </div>
+
+                    <h6 class="fw-bold mb-1 text-dark">{{ report.item.title|truncatechars:25 }}</h6>
+                    
+                    <div class="mb-4">
+                        <small class="text-muted d-block small">
                             {% if is_admin %}
-                                <strong>Reported by:</strong> {{ report.user.email }}
+                                <i class="bi bi-person me-1"></i> {{ report.user.email }}
                             {% else %}
-                                Closed on {{ report.updated_at|date:"d M Y" }}
+                                <i class="bi bi-calendar-check me-1"></i> Closed {{ report.updated_at|date:"d M Y" }}
                             {% endif %}
                         </small>
                     </div>
-                    <span class="badge bg-secondary-subtle text-secondary rounded-pill h-25">Resolved</span>
+
+                    <div class="mt-auto">
+                        <a href="{% url 'item_details' report.id %}" class="btn btn-light w-100 rounded-pill btn-sm fw-bold border py-2">
+                            <i class="bi bi-eye me-1"></i> View Full Details
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
         {% empty %}
-        <div class="col-12 text-center py-4 border rounded-4 bg-light">
-            <p class="text-muted mb-0">No other resolved reports found.</p>
+        <div class="col-12 text-center py-5 border border-dashed rounded-4 bg-light">
+            <i class="bi bi-inbox text-muted display-4 d-block mb-3"></i>
+            <p class="text-muted mb-0">No resolved reports found in the archive.</p>
         </div>
         {% endfor %}
     </div>
 </div>
+
+<style>
+    .transition-hover { transition: all 0.3s ease; }
+    .transition-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
+    .icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+</style>
 {% endblock %}
