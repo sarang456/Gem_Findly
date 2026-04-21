@@ -27,12 +27,24 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=(('admin', 'Admin'), ('user', 'User')), default='user')
+    is_admin_approved = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     first_name = models.CharField(max_length=50, blank=True)
     last_name = models.CharField(max_length=50, blank=True)
     gender = models.CharField(max_length=10, choices=(('male', 'Male'), ('female', 'Female'), ('other', 'Other')), blank=True, null=True)
+    ADMIN_STATUS_CHOICES = (
+        ('none', 'No Request'),
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    )
+    admin_status = models.CharField(
+        max_length=10, 
+        choices=ADMIN_STATUS_CHOICES, 
+        default='none'
+    )
 
     objects = UserManager()
 

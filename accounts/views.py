@@ -16,6 +16,10 @@ from django.conf import settings
 from core.models import Donation
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
+from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 
 
@@ -28,6 +32,13 @@ def register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
+            selected_role = form.cleaned_data.get('role')
+            if selected_role == 'admin':
+                user.admin_status = 'pending'
+                user.role = 'admin'
+            else:
+                user.admin_status = 'none'
+                user.role = 'user'
             user.is_active = False  # CRITICAL: User cannot login yet!
             user.save()
 
@@ -58,6 +69,183 @@ def login_view(request):
         form = AuthenticationForm()
     
     return render(request, 'accounts/login.html', {'form': form})
+
+
+
+
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        user = User.objects.filter(email=email).first()
+        
+        if user:
+            otp = random.randint(100000, 999999)
+            request.session['reset_otp'] = otp
+            request.session['reset_email'] = email
+
+            # --- WELL-MANNERED EMAIL LOGIC ---
+            subject = 'Reset Your Findly Password'
+            from_email = settings.EMAIL_HOST_USER
+            to = [email]
+
+            # 1. Prepare context for the HTML template
+            context = {
+                'user_name': user.first_name,
+                'otp': otp,
+            }
+
+            # 2. Render the HTML content
+            # Ensure you create this file in templates/accounts/emails/otp_mail.html
+            html_content = render_to_string('emails/otp_email.html', context)
+            
+            # 3. Create a plain-text version as a fallback
+            text_content = strip_tags(html_content) 
+
+            # 4. Construct the email
+            msg = EmailMultiAlternatives(subject, text_content, from_email, to)
+            msg.attach_alternative(html_content, "text/html")
+
+            try:
+                msg.send(fail_silently=False)
+                messages.success(request, f"A secure code has been sent to {email}")
+                print("✅ Well-mannered HTML email sent!")
+            except Exception as e:
+                print(f"❌ SMTP ERROR: {str(e)}")
+                messages.warning(request, "Email service busy. Using terminal debug.")
+
+            return redirect('verify_reset_otp')
+            
+        else:
+            messages.error(request, "No account found with that email.")
+            
+    return render(request, 'accounts/forgot_password.html')
+
+
+# accounts/views.py
+def reset_password(request):
+    email = request.session.get('reset_email')
+    if not email:
+        return redirect('forgot_password')
+
+    if request.method == 'POST':
+        new_password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if new_password == confirm_password:
+            try:
+                user = User.objects.get(email=email)
+                user.set_password(new_password)
+                user.save()
+                
+                # Success! Now clear the session
+                del request.session['reset_email']
+                
+                messages.success(request, "Password updated successfully! Please login.")
+                return redirect('login') # THIS MUST BE REACHED
+            except User.DoesNotExist:
+                messages.error(request, "User no longer exists.")
+                return redirect('forgot_password')
+        else:
+            messages.error(request, "Passwords do not match.")
+
+    return render(request, 'accounts/reset_password.html')
+
+
+
+def verify_reset_otp(request):
+    # 1. Security Check: Did they even start the forgot password process?
+    if 'reset_otp' not in request.session or 'reset_email' not in request.session:
+        messages.error(request, "Session expired. Please start over.")
+        return redirect('forgot_password')
+
+    if request.method == 'POST':
+        user_otp = request.POST.get('otp')
+        saved_otp = request.session.get('reset_otp')
+
+        # 2. Compare. Use string conversion to be safe!
+        if str(user_otp) == str(saved_otp):
+            # Success! Let them through to the reset page
+            messages.success(request, "OTP Verified. Set your new password.")
+            # Clear ONLY the OTP from session, keep the email for the next view
+            del request.session['reset_otp'] 
+            return redirect('reset_password')
+        else:
+            messages.error(request, "Invalid OTP. Please try again.")
+
+    return render(request, 'accounts/verify_reset_otp.html')
+
+
+
+
+@login_required
+def approve_admin(request, user_id):
+    # SECURITY: Only you (the first superuser) should do this
+    if not request.user.is_superuser:
+        messages.error(request, "Unauthorized access!")
+        return redirect('dashboard')
+        
+    target_user = get_object_or_404(User, id=user_id)
+    target_user.is_admin_approved = True
+    target_user.is_staff = True  # Allows them into the /admin panel if they need it
+    target_user.save()
+    
+    messages.success(request, f"Access granted for {target_user.email}.")
+    return redirect('admin_requests')
+
+@login_required
+def reject_admin(request, user_id):
+    if not request.user.is_superuser:
+        return redirect('dashboard')
+        
+    target_user = get_object_or_404(User, id=user_id)
+    target_user.role = 'user' # Strip the admin intent
+    target_user.is_admin_approved = False # Just to be safe
+    target_user.save()
+    
+    messages.warning(request, f"Request for {target_user.email} was rejected.")
+    return redirect('admin_requests')
+
+
+
+@login_required
+def admin_requests(request):
+    if not request.user.is_superuser:
+        return redirect('dashboard')
+        
+    pending_admins = User.objects.filter(admin_status='pending')
+    return render(request, 'accounts/admin_requests.html', {'pending_admins': pending_admins})
+
+# accounts/views.py
+
+@login_required
+def approve_admin(request, user_id):
+    if not request.user.is_superuser:
+        return redirect('dashboard')
+        
+    target_user = get_object_or_404(User, id=user_id)
+    target_user.admin_status = 'approved' # NEW
+    target_user.is_admin_approved = True
+    target_user.is_staff = True 
+    target_user.save()
+    
+    messages.success(request, f"Approved {target_user.email}")
+    return redirect('admin_requests')
+
+@login_required
+def reject_admin(request, user_id):
+    if not request.user.is_superuser:
+        return redirect('dashboard')
+        
+    target_user = get_object_or_404(User, id=user_id)
+    target_user.admin_status = 'rejected' # NEW
+    target_user.is_admin_approved = False 
+    target_user.is_staff = False
+    target_user.save()
+    
+    messages.warning(request, f"Rejected {target_user.email}")
+    return redirect('admin_requests')
+
+
 
 @login_required
 def profile_view(request, user_id=None):

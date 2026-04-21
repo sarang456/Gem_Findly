@@ -21,11 +21,14 @@ def admin_dashboard(request):
     query = request.GET.get('q', '')
     
     # Base statistics (these stay constant even during search)
+
+    pending_admin_count = User.objects.filter(role='admin', is_admin_approved=False).count()
     context = {
         'total_reports': Report.objects.count(),
         'pending_reports': Report.objects.filter(is_resolved=False).count(),
         'total_matches': Match.objects.count(),
         'total_users': User.objects.count(),
+        'pending_admin_count': pending_admin_count,
     }
 
     # Search Logic

@@ -23,10 +23,19 @@
 
                     {% for field in form %}
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-secondary">{{ field.label }}</label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-bold text-secondary mb-0">{{ field.label }}</label>
+                                
+                                {# If the field is password, show the link right next to the label #}
+                                {% if field.name == 'password' %}
+                                <a href="{% url 'forgot_password' %}" class="forgot-link">Forgot?</a>
+                                {% endif %}
+                            </div>
+
                             <div class="login-field-wrapper">
                                 {{ field }}
                             </div>
+                            
                             {% if field.errors %}
                                 <div class="text-danger x-small mt-1">{{ field.errors }}</div>
                             {% endif %}
@@ -37,6 +46,8 @@
                         Sign In
                     </button>
                 </form>
+
+{# Remove that old text-end div at the bottom #}
 
                 <div class="text-center mt-4 pt-2 border-top">
                     <p class="small text-muted mb-0">New to Findly? 
@@ -64,6 +75,31 @@
         border-color: #ff385c; /* Airbnb/Findly Danger Red */
         background-color: #fff;
         box-shadow: 0 0 0 4px rgba(255, 56, 92, 0.1);
+    }
+
+    .forgot-link {
+        font-size: 0.75rem;
+        color: #6c757d;
+        text-decoration: none;
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+
+    .forgot-link:hover {
+        color: #ff385c; /* Matches your Findly Red */
+        text-decoration: underline;
+    }
+
+    /* Adjust the Sign In button for better "Airbnb" feel */
+    .btn-danger {
+        background-color: #ff385c !important;
+        border: none !important;
+        transition: opacity 0.2s;
+    }
+
+    .btn-danger:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
     }
 </style>
 {% endblock %}

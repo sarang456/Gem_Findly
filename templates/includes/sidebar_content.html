@@ -32,6 +32,15 @@
                     🚩 Flagged Items
                 </a>
             </li>
+            {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link d-flex align-items-center gap-2 {% if request.resolver_match.url_name == 'admin_requests' %}active text-primary{% else %}text-muted{% endif %}" 
+                    href="{% url 'admin_requests' %}">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <span>Admin Requests</span>
+                    </a>
+                </li>
+                {% endif %}
         </ul>
     {% endif %}
 </div>
