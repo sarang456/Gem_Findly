@@ -31,3 +31,9 @@ staticfiles/
 
 .DS_Store
 Thumbs.db
+
+
+.env
+staticfiles/
+__pycache__/
+db.sqlite3

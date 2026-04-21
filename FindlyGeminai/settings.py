@@ -1,3 +1,29 @@
+# settings.py
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+import dj_database_url
+
+# Load the .env file
+load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Now use os.getenv to pull the secrets
+SECRET_KEY = os.getenv('SECRET_KEY')
+DEBUG = os.getenv('DEBUG') == 'True'
+
+# ... scroll down to your Email section ...
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
+
+# ... scroll down to your Razorpay section ...
+RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
+
+
+
+
+
 """
 Django settings for FindlyGeminai project.
 
@@ -20,7 +46,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!=q1#%x6s(r+hx(h)e-!ie$-5ze$#9uk(o=^j5(mu)#sde!!y_'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -46,6 +72,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -88,6 +115,9 @@ DATABASES = {
     }
 }
 
+db_from_env = dj_database_url.config(conn_max_age=600)
+DATABASES['default'].update(db_from_env)
+
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -122,36 +152,41 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
-import os
+# settings.py
 
+
+# --- Static Files (CSS, JavaScript, Images) ---
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-AUTH_USER_MODEL = 'core.User'
+# CRITICAL FOR DEPLOYMENT: This is where WhiteNoise finds your files
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-import os
+# This compresses your files so your site loads faster
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Where the files are stored on your computer
+
+# --- Media Files (User Uploads like Lost/Found Photos) ---
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+
+# --- Auth & Redirects ---
+AUTH_USER_MODEL = 'core.User'
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'  # This must match the 'name' in your urls.py
+LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
 
 
-# settings.py
-
-
-# FOR PRODUCTION (When you get your SMTP ready):
+# --- Email Settings ---
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'spidy2423@gmail.com'
-EMAIL_HOST_PASSWORD = 'kcud jgcx dewh cbyj' # Not your regular password!
+# WARNING: We will move this password to an Environment Variable later!
 
 
 
@@ -168,5 +203,4 @@ EMAIL_HOST_PASSWORD = 'kcud jgcx dewh cbyj' # Not your regular password!
 
 
 
-RAZORPAY_KEY_ID = 'rzp_test_SYypqSe8o0hG0x'
-RAZORPAY_KEY_SECRET = 'pu65jh4l769wVWDQw3Xm5yuA'
+
