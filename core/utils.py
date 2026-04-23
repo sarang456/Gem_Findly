@@ -1,5 +1,5 @@
 import numpy as np
-
+from django.contrib.staticfiles import finders
 from PIL import Image
 import io
 from haversine import haversine
@@ -9,35 +9,40 @@ from difflib import SequenceMatcher
 # Load the model once when the server starts (Standard Practice)
 
 
-def analyze_image(image_field):
-
+def analyze_image(image_input):
+    """
+    image_input can be a Django ImageField OR a string path like 'media/items/laptop.jpg'
+    """
     from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
     from tensorflow.keras.preprocessing import image as keras_image
 
     model = MobileNetV2(weights='imagenet')
 
-
-
-    """
-    Takes a Django ImageField, processes it, and returns top 3 AI labels.
-    """
     try:
-        # 1. Convert Django ImageField to PIL Image
-        img = Image.open(image_field)
-        img = img.convert('RGB')
-        img = img.resize((224, 224)) # MobileNetV2 expects 224x224
+        # 1. RESOLVE IMAGE PATH
+        if isinstance(image_input, str):
+            # Use Django's finders to locate the file in the static directory
+            absolute_path = finders.find(image_input)
+            if not absolute_path:
+                print(f"AI Error: Static file not found at {image_input}")
+                return {"error": "File not found"}
+            img = Image.open(absolute_path)
+        else:
+            # It's a normal dynamic upload
+            img = Image.open(image_input)
 
-        # 2. Convert to Array
+        # 2. PRE-PROCESS
+        img = img.convert('RGB').resize((224, 224))
         x = keras_image.img_to_array(img)
         x = np.expand_dims(x, axis=0)
         x = preprocess_input(x)
 
-        # 3. Predict
+        # 3. PREDICT (Load model INSIDE function to prevent RAM crashes)
+        model = MobileNetV2(weights='imagenet')
         preds = model.predict(x)
         decoded = decode_predictions(preds, top=3)[0]
 
-        # 4. Format as a clean dictionary for our JSONField
-        # Returns: {"label1": "backpack", "confidence1": 0.85, ...}
+        # 4. FORMAT TAGS
         tags = {}
         for i, (imagenet_id, label, score) in enumerate(decoded):
             tags[f"label_{i+1}"] = label.replace('_', ' ')
@@ -46,7 +51,7 @@ def analyze_image(image_field):
         return tags
     except Exception as e:
         print(f"AI Error: {e}")
-        return {"error": "Could not analyze image"}
+        return {"error": str(e)}
     
 def calculate_match_score(report1, report2):
     # 1. Distance Check (Max 5km)

@@ -21,11 +21,14 @@
     <div class="row g-5">
         <div class="col-lg-7">
             <div class="card border-0 shadow-lg rounded-5 overflow-hidden bg-white">
-                {% if report.item.image %}
+                {% if report.item.static_image_path %}
                     <div class="image-hover-zoom">
-                        <img src="{{ report.item.image.url }}" class="img-fluid w-100" 
+                        <img src="{{ static report.item.static_image_path }}" class="img-fluid w-100" 
                              style="min-height: 500px; max-height: 600px; object-fit: cover;">
                     </div>
+                {% elif report.item.image %}
+                    <img src="{{ report.item.image.url }}" class="img-fluid w-100" 
+                        style="min-height: 500px; max-height: 600px; object-fit: cover;">
                 {% else %}
                     <div class="bg-light d-flex align-items-center justify-content-center" style="height: 500px;">
                         <i class="bi bi-image text-muted display-1 opacity-25"></i>

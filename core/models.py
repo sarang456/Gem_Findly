@@ -55,13 +55,19 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 # 2. The Item (The "Physical" Object)
+# core/models.py (or wherever Item lives)
 class Item(models.Model):
-    category = models.CharField(max_length=100) # e.g. Electronics, Pets
+    category = models.CharField(max_length=100)
     title = models.CharField(max_length=200)
     description = models.TextField()
+    
+    # This stays for real uploads (Render ephemeral)
     image = models.ImageField(upload_to='items/', blank=True, null=True)
     
-    # AI Metadata - This makes the "AI" feature real
+    # ADD THIS: For your permanent static images
+    # Example value to enter in Admin: "media/items/laptop.jpg"
+    static_image_path = models.CharField(max_length=500, blank=True, null=True)
+    
     ai_tags = models.JSONField(default=dict, blank=True) 
     qr_code_id = models.UUIDField(unique=True, null=True, blank=True)
 
