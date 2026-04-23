@@ -1,6 +1,5 @@
 import numpy as np
-from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
-from tensorflow.keras.preprocessing import image as keras_image
+
 from PIL import Image
 import io
 from haversine import haversine
@@ -8,9 +7,17 @@ from .models import Report, Match
 from difflib import SequenceMatcher
 
 # Load the model once when the server starts (Standard Practice)
-model = MobileNetV2(weights='imagenet')
+
 
 def analyze_image(image_field):
+
+    from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
+    from tensorflow.keras.preprocessing import image as keras_image
+
+    model = MobileNetV2(weights='imagenet')
+
+
+
     """
     Takes a Django ImageField, processes it, and returns top 3 AI labels.
     """
