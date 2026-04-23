@@ -182,14 +182,30 @@ LOGOUT_REDIRECT_URL = 'login'
 
 
 # --- Email Settings ---
+# --- Final Email Settings (Cleaned & Corrected) ---
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_USER')
-DEFAULT_FROM_EMAIL = os.getenv('EMAIL_USER', 'spidy2423@gmail.com')
-SERVER_EMAIL = os.getenv('EMAIL_USER', 'spidy2423@gmail.com')
+EMAIL_DEBUG = True  # Keep this True for now to see local errors
+
+# This MUST match the email you used for the App Password
+EMAIL_HOST_USER = os.getenv('EMAIL_USER') 
+
+# This MUST pull from your .env (no hardcoded password here!)
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_PASSWORD')
+
+# CRITICAL: Google rejects mail if these don't match EMAIL_HOST_USER
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_USER')
+SERVER_EMAIL = os.getenv('EMAIL_USER')
 # WARNING: We will move this password to an Environment Variable later!
+
+
+
+# settings.py
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# Add this line temporarily
+EMAIL_DEBUG = True
 
 
 
