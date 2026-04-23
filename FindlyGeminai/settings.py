@@ -187,7 +187,8 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_USER')
-DEFAULT_FROM_EMAIL = os.getenv('EMAIL_USER')
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_USER', 'spidy2423@gmail.com')
+SERVER_EMAIL = os.getenv('EMAIL_USER', 'spidy2423@gmail.com')
 # WARNING: We will move this password to an Environment Variable later!
 
 
