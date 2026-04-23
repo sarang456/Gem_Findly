@@ -107,11 +107,9 @@
                     {% endif %}
 
                     <div class="image-container" style="position: relative;">
-                        {% if report.item.static_image_path %}
+                        {% if report.item.image %}
                             <img src="{{ report.item.image.url }}" class="card-img-top" 
                                 style="height: 180px; object-fit: cover; {% if report.is_resolved %}filter: grayscale(80%) opacity(0.6);{% endif %}">
-                        {% elif report.item.image %}
-                            <img src="{{ report.item.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;">
                         {% else %}
                             <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
                                 <i class="bi bi-image text-muted fs-1"></i>

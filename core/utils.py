@@ -5,6 +5,10 @@ import io
 from haversine import haversine
 from .models import Report, Match
 from difflib import SequenceMatcher
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
+from tensorflow.keras.preprocessing import image as keras_image
+
+model = MobileNetV2(weights='imagenet')
 
 # Load the model once when the server starts (Standard Practice)
 
@@ -13,10 +17,7 @@ def analyze_image(image_input):
     """
     image_input can be a Django ImageField OR a string path like 'media/items/laptop.jpg'
     """
-    from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input, decode_predictions
-    from tensorflow.keras.preprocessing import image as keras_image
-
-    model = MobileNetV2(weights='imagenet')
+   
 
     try:
         # 1. RESOLVE IMAGE PATH
